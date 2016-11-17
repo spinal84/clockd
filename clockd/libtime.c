@@ -902,7 +902,7 @@ int time_is_operator_time_accessible(void)
   return rv;
 }
 
-const char *
+static const char *
 fix_tz(const char *tz, char *tz_fixed)
 {
   if (tz[0] && isalpha(tz[0]) && tz[1] && isalpha(tz[1]))
@@ -927,4 +927,35 @@ fix_tz(const char *tz, char *tz_fixed)
   }
 
   return tz;
+}
+
+int
+time_get_time_diff(time_t tick, const char *tz1, const char *tz2)
+{
+  const char *tz1_fixed, *tz2_fixed;
+  time_t t1, t2;
+  struct tm tp;
+  char tz1_buf[24], tz2_buf[24];
+
+  TIME_TRY_INIT_SYNC(0);
+
+  tz1_fixed = fix_tz(tz1, tz1_buf);
+  tz2_fixed = fix_tz(tz2, tz2_buf);
+
+  setenv("TZ", tz1_fixed, 1);
+  tzset();
+  localtime_r(&tick, &tp);
+  t1 = mktime(&tp) - get_utc_offset(tick);
+
+  setenv("TZ", tz2_fixed, 1);
+  tzset();
+  localtime_r(&tick, &tp);
+  t2 = mktime(&tp) - get_utc_offset(tick);
+
+  setenv("TZ", s_tz, 1);
+  tzset();
+
+  TIME_EXIT_SYNC;
+
+  return t1 - t2;
 }
