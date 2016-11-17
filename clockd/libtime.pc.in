@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libtime
+Description: Interface to clockd service
+Version: @VERSION@
+Libs: -L${libdir} -ltime
+Cflags: -I${includedir}

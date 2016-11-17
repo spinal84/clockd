@@ -1,0 +1,42 @@
+Source: clockd
+Section: misc
+Priority: optional
+Maintainer: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Build-Depends: debhelper (>= 4.1.0),
+ pkg-config,
+ libdbus-1-dev (>= 1.0),
+ libtool,
+ autoconf,
+ automake
+Standards-Version: 3.7.2
+
+Package: clockd
+Section: misc
+Priority: optional
+Architecture: any
+Depends: ${shlibs:Depends}
+Description:  Clock daemon
+ This package contains clock daemon which
+ manages system wide time and date state
+
+Package: libtime0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: API for clockd service
+ This package contains C API for using clockd services.
+
+Package: clockd-dbg
+Section: libdevel
+Priority: extra
+Architecture: any
+Depends: libiphb0 (= ${binary:Version})
+Description: Debug symbols for clockd and libtime0
+ This package provides debug symbols for the clockd API and daemon.
+
+Package: libtime-dev
+Section: libdevel
+Architecture: any
+Depends: libtime0 (= ${binary:Version})
+Description: Development files for clockd services
+ This package contains C headers for the clockd API.

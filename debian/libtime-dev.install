@@ -1,0 +1,4 @@
+debian/tmp/usr/lib/libtime.so
+debian/tmp/usr/lib/libtime.a
+debian/tmp/usr/include/clockd/*.h
+debian/tmp/usr/lib/pkgconfig/*.pc
