@@ -15,21 +15,21 @@ clockdincludedir = @includedir@/clockd
 #
 # Build targets
 #
-#bin_PROGRAMS = iphbd
-#noinst_PROGRAMS = hbtest
+bin_PROGRAMS = clockd
 lib_LTLIBRARIES = libtime.la
+lib_LIBRARIES = libtime.a
 
-#iphbd_SOURCES = iphbd.c
-#iphbd_CFLAGS = $(DBUS_CFLAGS)
-#iphbd_LDADD = $(DBUS_LIBS)
+libtime_a_SOURCES = libtime.c codec.c
+libtime_a_CFLAGS = $(DBUS_CFLAGS)
 
-#hbtest_SOURCES = hbtest.c
-#hbtest_LDADD = libiphb.la
+clockd_SOURCES = clockd.c
+clockd_CFLAGS = $(DBUS_CFLAGS)
+clockd_LDADD = $(DBUS_LIBS)
 
-libtime_la_SOURCES = libtime.c codec.c
+libtime_la_SOURCES = libtime.c
 libtime_la_CFLAGS = $(DBUS_CFLAGS)
 libtime_la_LIBADD = $(DBUS_LIBS)
-libtime_la_LDFLAGS = $(AM_LDFLAGS) -pthread
+libtime_la_LDFLAGS = $(AM_LDFLAGS) -pthread --shared
 
 clockdinclude_HEADERS = libtime.h
 
