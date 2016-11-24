@@ -1,5 +1,7 @@
+#include "mainloop.h"
+
 int
 main (int argc, char **argv)
 {
-  return 1;
+  return mainloop_run(argc, argv);
 }

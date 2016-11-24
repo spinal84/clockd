@@ -20,11 +20,11 @@ lib_LTLIBRARIES = libtime.la
 lib_LIBRARIES = libtime.a
 
 libtime_a_SOURCES = libtime.c codec.c
-libtime_a_CFLAGS = $(DBUS_CFLAGS)
+libtime_a_CFLAGS = $(DBUS_CFLAGS) -DMESTR="\"$(PACKAGE_NAME):\""
 
-clockd_SOURCES = clockd.c
-clockd_CFLAGS = $(DBUS_CFLAGS)
-clockd_LDADD = $(DBUS_LIBS)
+clockd_SOURCES = sighnd.c clockd.c mainloop.c internal_time_utils.c mcc_tz_utils.c logging.c server.c
+clockd_CFLAGS = $(DBUS_CFLAGS) $(GLIB_CFLAGS) $(CITYINFO_CFLAGS) -DMESTR="\"$(PACKAGE_NAME):\""
+clockd_LDADD = $(DBUS_LIBS) $(GLIB_LIBS) $(CITYINFO_LIBS) libtime.a
 
 libtime_la_SOURCES = libtime.c
 libtime_la_CFLAGS = $(DBUS_CFLAGS)
