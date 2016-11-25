@@ -44,6 +44,7 @@ debian/libtime0.postrm.debhelper
 debian/tmp/
 
 clockd/clockd
+clockd/rclockd
 clockd/libtime.pc
 clockd/libtime-uninstalled.pc
 
