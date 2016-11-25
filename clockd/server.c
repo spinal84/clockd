@@ -14,10 +14,10 @@
 #include <stdbool.h>
 
 #include <glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 //#include <libosso.h>
 
-//#include <dbus/dbus-glib-lowlevel.h>
 
 #include "codec.h"
 #include "logging.h"
@@ -44,7 +44,7 @@ static DBusMessage *server_get_time_cb(DBusMessage *msg);
 static int set_tz(const char *tzname);
 static int server_set_time(time_t tick);
 static void next_dst_change(time_t tick, bool keep_alarm_timer);
-//static void server_set_operator_tz_cb(const char *tz);
+static void server_set_operator_tz_cb(const char *tz);
 static int set_network_time(bool save_config);
 static int set_net_timezone(const char *tzname);
 
@@ -58,6 +58,7 @@ static guint alarm_timer_id;
 
 static char saved_server_opertime_tz[CLOCKD_TZ_SIZE] = {0,};
 static char server_tz[CLOCKD_TZ_SIZE] = {0,};
+static char restore_tz[CLOCKD_TZ_SIZE] = {0,};
 static char default_tz[CLOCKD_TZ_SIZE] = {0,};
 static char time_format[CLOCKD_GET_TIMEFMT_SIZE] = {0,};
 
@@ -769,7 +770,7 @@ server_set_time(time_t tick)
 
   return rv;
 }
-#if 0
+
 static void
 server_set_operator_tz_cb(const char *tz)
 {
@@ -796,7 +797,7 @@ server_set_operator_tz_cb(const char *tz)
   else
     DO_LOG(LOG_ERR, "server_set_operator_tz_cb(): tz = <null> !!!");
 }
-#endif
+
 static gboolean
 handle_alarm()
 {
@@ -910,4 +911,304 @@ server_quit(void)
     dbus_connection_unref(dbus_system_connection);
     dbus_system_connection = 0;
   }
+}
+
+static void
+server_init_autosync()
+{
+  const char *s = getenv("CLOCKD_NET_TIME");
+
+  if (s)
+  {
+    if (!strcmp(s, "disabled"))
+    {
+      net_time_setting = 0;
+      autosync = 0;
+      net_time_disabled_env = 1;
+      DO_LOG(LOG_DEBUG,  "default network time setting is disabled");
+    }
+    else if (!strcmp(s, "yes"))
+    {
+      net_time_setting = 1;
+      autosync = 1;
+      DO_LOG(LOG_DEBUG,
+             "default network time setting is enabled, autosync is on");
+    }
+    else if (!strcmp(s, "no"))
+    {
+      net_time_setting = 1;
+      autosync = 0;
+      DO_LOG(LOG_DEBUG,
+             "default network time setting is enabled, autosync is off");
+    }
+    else
+    {
+      DO_LOG(LOG_ERR, "default invalid environment setting %s=\"%s\"",
+             "CLOCKD_NET_TIME", s);
+    }
+  }
+}
+
+static void
+server_init_time_format()
+{
+  const char *s = getenv("CLOCKD_TIME_FORMAT");
+
+  if (s)
+  {
+    if (*s == '%')
+      snprintf(time_format, sizeof(time_format), "%s", s);
+    else
+      snprintf(&time_format[1], sizeof(time_format) - 1, "%s", s);
+
+    DO_LOG(LOG_DEBUG, "default time format set to \"%s\"", time_format);
+  }
+}
+
+static void
+server_init_default_tz()
+{
+  const char *s = getenv("CLOCKD_DEFAULT_TZ");
+
+  if (s)
+  {
+    snprintf(default_tz, sizeof(default_tz), "%s", s);
+    DO_LOG(LOG_DEBUG, "default timezone is \"%s\"", default_tz);
+  }
+}
+
+static int
+read_conf ()
+{
+  struct stat st;
+  FILE *fp;
+  char line[512];
+
+  /* FIXME - hardcoded home directory */
+  if (stat("/home/user/", &st))
+  {
+    DO_LOG(LOG_ERR, "problems with directory %s (%s)", "/home/user/",
+           strerror(errno));
+  }
+
+  fp = fopen("/home/user/.clockd.conf", "r");
+
+  if (!fp)
+  {
+    DO_LOG(LOG_DEBUG, "failed to read file %s (%s)", "/home/user/.clockd.conf",
+           strerror(errno));
+    return -1;
+  }
+
+  line[sizeof(line) - 1] = 0;
+
+  while (1)
+  {
+    char *p = NULL;
+
+    do
+    {
+      if (!fgets(line, sizeof(line) - 1, fp))
+      {
+        DO_LOG(LOG_DEBUG, "configuration file %s read",
+               "/home/user/.clockd.conf");
+        fclose(fp);
+        return 0;
+      }
+
+      if (line[0] == '#')
+        continue;
+
+      p = strrchr(line, '\n');
+      if (p)
+        *p = 0;
+
+      p = strrchr(line, '\r');
+      if (p)
+        *p = 0;
+
+      p = strchr(line, '=');
+    }
+    while (!p);
+
+    *p = 0;
+    p++;
+
+    if (!strcmp(line, "time_format"))
+    {
+      snprintf(time_format, sizeof(time_format), "%s", p);
+      DO_LOG(LOG_DEBUG, "read_conf: %s=%s", "time_format", time_format);
+    }
+    else if (!strcmp(line, "autosync"))
+    {
+      if (!net_time_disabled_env)
+      {
+        autosync = atoi(p) > 0;
+        DO_LOG(LOG_DEBUG, "read_conf: %s=%d", "autosync", autosync);
+      }
+      else
+        DO_LOG(LOG_DEBUG, "read_conf: autosync disabled by env");
+    }
+    else if (!strcmp(line, "net_tz"))
+    {
+      snprintf(server_tz, sizeof(server_tz), "%s", p);
+      DO_LOG(LOG_DEBUG, "read_conf: %s=%s", "net_tz", server_tz);
+    }
+    else if (!strcmp(line, "restore_tz"))
+    {
+      snprintf(restore_tz, sizeof(restore_tz), "%s", p);
+      DO_LOG(LOG_DEBUG, "read_conf: %s=%s", "restore_tz", restore_tz);
+    }
+  }
+
+  return 0;
+}
+
+static int
+get_autosync(void)
+{
+  return autosync;
+}
+
+int
+server_init()
+{
+  DBusError error = DBUS_ERROR_INIT;
+  int retries;
+  int rv = -1;
+
+  DO_LOG(LOG_INFO, "starting up");
+
+  server_init_autosync();
+  server_init_time_format();
+  server_init_default_tz();
+  read_conf();
+
+  if (restore_tz[0])
+  {
+    set_tz(restore_tz);
+    restore_tz[0] = 0;
+    save_conf();
+  }
+
+  if (server_tz[0])
+    internal_set_tz(server_tz);
+  else
+  {
+    char buf[512];
+    ssize_t bytes = readlink("/etc/localtime", buf, sizeof(buf) - 1);
+
+    if (bytes > 0)
+    {
+      buf[bytes] = 0;
+
+      if (strstr(buf, "/usr/share/zoneinfo/"))
+      {
+        snprintf(server_tz, sizeof(server_tz), ":%s",
+                 &buf[strlen("/usr/share/zoneinfo/")]);
+      }
+      else
+        snprintf(server_tz, sizeof(server_tz), ":%s", buf);
+    }
+
+    internal_set_tz(":/etc/localtime");
+  }
+
+  DO_LOG(LOG_DEBUG,
+         "timezone set to '%s', operator time is %s, network time autosync is %s, time format is %s",
+         server_tz,
+         net_time_setting ? "enabled" : "disabled",
+         autosync ? "enabled" : "disabled",
+         time_format);
+
+  was_dst = internal_get_dst(0);
+  retries = 0;
+
+  while (1)
+  {
+    dbus_system_connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+
+    if (dbus_system_connection)
+      break;
+
+    if (retries == 3)
+    {
+      DO_LOG(LOG_ERR, "dbus_bus_get(SYSTEM) %s", error.message);
+      goto out;
+    }
+
+    DO_LOG(LOG_DEBUG, "dbus_bus_get(SYSTEM) %s - retry", error.message);
+
+    retries++;
+    dbus_error_init(&error);
+    sleep(2);
+  }
+
+  if (dbus_bus_request_name(dbus_system_connection, "com.nokia.clockd", 4u, &error) != 1)
+  {
+    if (dbus_error_is_set(&error))
+    {
+      DO_LOG(LOG_ERR, "dbus_bus_request_name(%s) error %s", "com.nokia.clockd",
+             error.message);
+    }
+    else
+    {
+      DO_LOG(LOG_ERR,
+             "dbus_bus_request_name(%s), not primary owner of connection",
+             "com.nokia.clockd");
+    }
+
+    sleep(2);
+    goto out;
+  }
+
+  dbus_connection_setup_with_g_main(dbus_system_connection, 0);
+  dbus_connection_set_exit_on_disconnect(dbus_system_connection, 0);
+
+  if (!dbus_connection_add_filter(dbus_system_connection, server_filter, 0, 0))
+  {
+    DO_LOG(LOG_ERR, "server_init(%s), dbus_connection_add_filter failed",
+           "com.nokia.clockd");
+    goto out;
+  }
+
+  dbus_connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+
+  if (!dbus_connection)
+  {
+    DO_LOG(LOG_ERR, "dbus_bus_get(SYSTEM) %s", error.message);
+    goto out;
+  }
+
+  dbus_connection_setup_with_g_main(dbus_connection, 0);
+  dbus_connection_set_exit_on_disconnect(dbus_connection, 0);
+  /* FIXME - error handling */
+  dbus_bus_add_match(dbus_connection, CSD_TIMEINFO_CHANGE_MATCH_RULE, &error);
+  dbus_bus_add_match(dbus_connection, MCE_MATCH_RULE, &error);
+  dbus_connection_flush(dbus_connection);
+
+  if (dbus_error_is_set(&error))
+  {
+    DO_LOG(LOG_ERR, "dbus_bus_add_match(%s) error %s",
+           CSD_TIMEINFO_CHANGE_MATCH_RULE, error.message);
+    goto out;
+  }
+
+  next_dst_change(time(0), 1);
+
+  if (mcc_tz_utils_init(dbus_connection, get_autosync,
+                        handle_csd_net_time_change,
+                        server_set_operator_tz_cb))
+  {
+    DO_LOG(LOG_ERR, "mcc_tz_utils_init() error");
+    goto out;
+  }
+
+  dump_date(server_tz);
+  rv = 0;
+
+out:
+  dbus_error_free(&error);
+
+  return rv;
 }

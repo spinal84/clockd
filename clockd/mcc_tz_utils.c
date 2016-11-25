@@ -20,8 +20,8 @@ static unsigned int mcc_cache = 0;
 
 /* FIXME */
 static int (*get_autosync_enabled)() = NULL;
-static int (*handle_csd_net_time_change)() = NULL;
-static void (*set_operator_tz)(char *tzname) = NULL;
+static int (*handle_csd_net_time_change)(DBusMessage *) = NULL;
+static void (*set_operator_tz)(const char *tzname) = NULL;
 
 static bool registration_status_change_dbus_handler_installed = false;
 
@@ -431,8 +431,8 @@ mcc_tz_add_registration_change_match(void)
 int
 mcc_tz_utils_init(DBusConnection *server_system_bus,
                   int (*server_get_autosync_enabled)(void),
-                  int (*server_handle_csd_net_time_change)(void),
-                  void (*server_set_operator_tz)(char *))
+                  int (*server_handle_csd_net_time_change)(DBusMessage *),
+                  void (*server_set_operator_tz)(const char *))
 {
   if (!server_system_bus || !server_get_autosync_enabled ||
       !server_handle_csd_net_time_change || !server_set_operator_tz)
