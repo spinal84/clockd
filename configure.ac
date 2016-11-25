@@ -34,6 +34,7 @@ AM_PROG_CC_C_O()
 # Pkgconf checks
 PKG_CHECK_MODULES(GLIB, glib-2.0)
 PKG_CHECK_MODULES(DBUS, dbus-1)
+PKG_CHECK_MODULES(DBUSGLIB, dbus-glib-1)
 PKG_CHECK_MODULES(CITYINFO, libcityinfo0-0)
 
 # Check libs (that are not yet checked)
