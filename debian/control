@@ -2,7 +2,8 @@ Source: clockd
 Section: misc
 Priority: optional
 Maintainer: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
-Build-Depends: debhelper (>= 4.1.0),
+Build-Depends: debhelper (>= 5),
+ cdbs,
  pkg-config,
  libdbus-1-dev (>= 1.0),
  libtool,
@@ -31,7 +32,7 @@ Package: clockd-dbg
 Section: libdevel
 Priority: extra
 Architecture: any
-Depends: libiphb0 (= ${binary:Version})
+Depends: libtime0 (= ${binary:Version}), clockd (= ${binary:Version})
 Description: Debug symbols for clockd and libtime0
  This package provides debug symbols for the clockd API and daemon.
 
