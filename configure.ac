@@ -1,6 +1,8 @@
 # Package name and version
 AC_INIT(clockd, 0.0.41)
 
+AM_MAINTAINER_MODE
+
 AM_INIT_AUTOMAKE
 
 AC_PREREQ([2.61])
@@ -13,7 +15,7 @@ AC_CONFIG_SRCDIR([clockd/libtime.c])
 #
 # Compiler and linker flags
 #
-AC_DEFINE_UNQUOTED([PRG_VERSION],[$VERSION],[Version for iphbd])
+AC_DEFINE_UNQUOTED([PRG_VERSION],[$VERSION],[Version for clockd])
 
 AC_SUBST(C_GENFLAGS, ["-pthread -g -std=c99 -Wall -Wwrite-strings -Wmissing-prototypes -Wall -Werror"])
 

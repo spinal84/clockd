@@ -1,1 +1,3 @@
 SUBDIRS = clockd
+
+MAINTAINERCLEANFILES = Makefile.in

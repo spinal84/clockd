@@ -39,15 +39,13 @@ clockdinclude_HEADERS = libtime.h
 pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = libtime.pc
 
-clockdconfinitddir=$(sysconfdir)/init.d
-clockdconfinitd_DATA = ../etc/init.d/clockd
 clockdconfossorfsscriptsdir=$(sysconfdir)/osso-rfs-scripts
 clockdconfossorfsscripts_DATA = ../etc/osso-rfs-scripts/clockd-rfs.sh
-clockdconfeventddir=$(sysconfdir)/event.d
-clockdconfeventd_DATA = ../etc/event.d/clock-daemon
 clockdconfdbusdir=$(sysconfdir)/dbus-1/system.d
 clockdconfdbus_DATA = ../etc/dbus-1/system.d/clockd.conf
 clockdconfbackuprestoredir=$(sysconfdir)/osso-backup/restore.d/always
 clockdconfbackuprestore_DATA = ../etc/osso-backup/restore.d/always/clockd_restart.sh
 clockdconfbackupapplicationsdir = $(sysconfdir)/osso-backup/applications
 clockdconfbackupapplications_DATA = ../etc/osso-backup/applications/clockd.conf
+
+MAINTAINERCLEANFILES = Makefile.in
