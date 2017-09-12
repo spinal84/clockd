@@ -9,6 +9,8 @@ Build-Depends: debhelper (>= 5),
  libtool,
  autoconf,
  automake,
+ libglib2.0-dev,
+ libdbus-glib-1-dev,
  libcityinfo-dev
 Standards-Version: 3.7.2
 
