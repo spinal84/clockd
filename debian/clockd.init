@@ -47,7 +47,7 @@ test -x $DSMETOOL || USE_DSMETOOL=no
 
 if [ -e /etc/osso-af-init/af-defines.sh ]
 then
-  source /etc/osso-af-init/af-defines.sh
+  . /etc/osso-af-init/af-defines.sh
 fi
 
 if [ -d /etc/osso-af-init ]
@@ -55,7 +55,7 @@ then
   if [ -f /etc/osso-af-init/*.defs ]; then
     for i in /etc/osso-af-init/*.defs
     do
-      source $i
+      . $i
     done
   fi
 fi
