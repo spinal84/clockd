@@ -1,0 +1,9 @@
+Purpose
+=======
+Provides centralized place for handling time.
+
+Description
+===========
+* Provides service and API for requesting, changing and notifying time
+  and timezone changes.
+* Provides interface for monitoring network time notifications.
