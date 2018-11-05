@@ -290,7 +290,7 @@ handle_csd_net_time_change(DBusMessage *msg)
       snprintf(buf, sizeof(buf), ":Etc/GMT%c%d:%d", sign, h, m);
     else
     {
-      if (h == 0)
+      if (!h)
         snprintf(buf, sizeof(buf), ":Etc/GMT");
       else
         snprintf(buf, sizeof(buf), ":Etc/GMT%c%d", sign, h);
@@ -958,7 +958,7 @@ server_init_default_tz()
 }
 
 static int
-read_conf ()
+read_conf()
 {
   struct stat st;
   FILE *fp;
