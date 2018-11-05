@@ -14,43 +14,43 @@
 #include "mcc_tz_utils.h"
 #include "internal_time_utils.h"
 
-static GSList *country_tz_list = NULL;
+static GSList *country_tz_name_list = NULL;
 static DBusConnection *system_bus = NULL;
 static unsigned int mcc_cache = 0;
 
-/* FIXME */
-static int (*get_autosync_enabled)() = NULL;
-static int (*handle_csd_net_time_change)(DBusMessage *) = NULL;
-static void (*set_operator_tz)(const char *tzname) = NULL;
+static GetAutosyncEnabled get_autosync_enabled = NULL;
+static HandleCsdNetTimeChange handle_csd_net_time_change = NULL;
+static SetOperatorTz set_operator_tz = NULL;
 
 static bool registration_status_change_dbus_handler_installed = false;
 
 static void
-mcc_country_tz_list_free()
+mcc_tz_destroy_country_tz_name_list()
 {
   GSList *prev;
 
   while (true)
   {
-    prev = country_tz_list;
+    prev = country_tz_name_list;
 
     if (!prev)
       break;
 
-    country_tz_list = country_tz_list->next;
+    country_tz_name_list = country_tz_name_list->next;
     free(prev->data);
     g_slist_free_1(prev);
   }
 }
 
 static gint
-tz_name_compare(gconstpointer a, gconstpointer b)
+tz_name_compare(gconstpointer iterTZName, gconstpointer searchingTZName)
 {
-  return internal_tz_cmp((const char *)a, (const char *)b);
+  return internal_tz_cmp((const char *)iterTZName,
+                         (const char *)searchingTZName);
 }
 
 static gboolean
-mcc_tz_for_next_country(const Cityinfo *city, gpointer searchingCountryName)
+mcc_tz_searching_tz_by_country_name(const Cityinfo *city, gpointer data)
 {
   gchar *country;
   gchar *zone;
@@ -58,22 +58,22 @@ mcc_tz_for_next_country(const Cityinfo *city, gpointer searchingCountryName)
   if (!city)
   {
     DO_LOG(LOG_WARNING,
-           "clockd:mcc_tz_for_next_country(): NULL city info passed");
-    return 0;
+           "mcc_tz_for_next_country(): NULL city info passed");
+    return FALSE;
   }
 
-  if (!searchingCountryName)
+  if (!data)
   {
     DO_LOG(LOG_ERR,
            "mcc_tz_for_next_country(): NULL searchingCountryName passed");
-    return 0;
+    return FALSE;
   }
 
   country = cityinfo_get_country(city);
   if (country)
   {
-    if (strcmp(country, (const char *)searchingCountryName))
-      return 1;
+    if (strcmp(country, (const char *)data))
+      return TRUE;
 
     zone = cityinfo_get_zone(city);
 
@@ -81,13 +81,13 @@ mcc_tz_for_next_country(const Cityinfo *city, gpointer searchingCountryName)
     {
       DO_LOG(LOG_WARNING,
              "mcc_tz_for_next_country(): zone = NULL in city info");
-      return 1;
+      return TRUE;
     }
 
-    if (g_slist_find_custom(country_tz_list, zone, tz_name_compare))
-      return 1;
+    if (g_slist_find_custom(country_tz_name_list, zone, tz_name_compare))
+      return TRUE;
 
-    country_tz_list = g_slist_prepend(country_tz_list, strdup(zone));
+    country_tz_name_list = g_slist_prepend(country_tz_name_list, strdup(zone));
   }
   else
   {
@@ -95,7 +95,7 @@ mcc_tz_for_next_country(const Cityinfo *city, gpointer searchingCountryName)
            "mcc_tz_for_next_country(): countryName = NULL in city info, continue searching");
   }
 
-  return 1;
+  return TRUE;
 }
 
 static void
@@ -126,11 +126,11 @@ mcc_tz_dump_country_list()
 {
   if (clockd_debug_mode)
   {
-    GSList *l = country_tz_list;
+    GSList *l = country_tz_name_list;
 
-    if (country_tz_list)
+    if (country_tz_name_list)
     {
-      DO_LOG(LOG_DEBUG, "GSList count = %d", g_slist_length(country_tz_list));
+      DO_LOG(LOG_DEBUG, "GSList count = %d", g_slist_length(country_tz_name_list));
 
       do
       {
@@ -197,7 +197,7 @@ mcc_tz_find_country_by_mcc(unsigned int mcc)
       }
 
       DO_LOG(LOG_WARNING,
-             "mcc_tz_find_country_by_mcc(): can't pars line: %s", buf);
+             "mcc_tz_find_country_by_mcc(): can't parse line: %s", buf);
     }
   }
   while (mcc_found != mcc);
@@ -218,8 +218,8 @@ mcc_tz_set_tz_from_mcc()
 {
   DO_LOG(LOG_DEBUG, "mcc_tz_set_tz_from_mcc(): mcc_cache = %d", mcc_cache);
 
-  if (g_slist_length(country_tz_list) == 1 && country_tz_list->data)
-    set_operator_tz((char *)country_tz_list->data);
+  if (g_slist_length(country_tz_name_list) == 1 && country_tz_name_list->data)
+    set_operator_tz((char *)country_tz_name_list->data);
 }
 
 static void
@@ -290,13 +290,13 @@ mcc_tz_handle_registration_status_reply(struct DBusMessage *msg)
 
         DO_LOG(LOG_DEBUG, "mcc changed, mcc_cache = %d", mcc_cache);
 
-        mcc_country_tz_list_free();
+        mcc_tz_destroy_country_tz_name_list();
 
         country = mcc_tz_find_country_by_mcc(mcc);
 
         if (country)
         {
-          cityinfo_foreach(mcc_tz_for_next_country, country);
+          cityinfo_foreach(mcc_tz_searching_tz_by_country_name, country);
           mcc_tz_dump_country_list();
           free(country);
         }
@@ -377,7 +377,7 @@ mcc_tz_registration_status_reply_dbus_cb(DBusPendingCall *pending,
 }
 
 void
-mcc_tz_add_registration_change_match(void)
+mcc_tz_setup_timezone_from_mcc_if_required(void)
 {
   if (get_autosync_enabled())
   {
@@ -430,9 +430,9 @@ mcc_tz_add_registration_change_match(void)
 
 int
 mcc_tz_utils_init(DBusConnection *server_system_bus,
-                  int (*server_get_autosync_enabled)(void),
-                  int (*server_handle_csd_net_time_change)(DBusMessage *),
-                  void (*server_set_operator_tz)(const char *))
+                  GetAutosyncEnabled server_get_autosync_enabled,
+                  HandleCsdNetTimeChange server_handle_csd_net_time_change,
+                  SetOperatorTz server_set_operator_tz)
 {
   if (!server_system_bus || !server_get_autosync_enabled ||
       !server_handle_csd_net_time_change || !server_set_operator_tz)
@@ -444,7 +444,7 @@ mcc_tz_utils_init(DBusConnection *server_system_bus,
   get_autosync_enabled = server_get_autosync_enabled;
   handle_csd_net_time_change = server_handle_csd_net_time_change;
   set_operator_tz = server_set_operator_tz;
-  mcc_tz_add_registration_change_match();
+  mcc_tz_setup_timezone_from_mcc_if_required();
 
   return 0;
 }
@@ -456,7 +456,7 @@ mcc_tz_is_tz_name_in_country_tz_list(const char *tz_name)
   GSList *l;
 
   p = tz_name;
-  l = country_tz_list;
+  l = country_tz_name_list;
 
   while (*p)
   {
@@ -480,19 +480,21 @@ mcc_tz_is_tz_name_in_country_tz_list(const char *tz_name)
 }
 
 void
-mcc_tz_find_tz_in_country_tz_list(struct tm *tm, int dst, int gmtoff,
-                                  char **tz_name)
+mcc_tz_guess_tz_for_country_by_dst_and_offset(struct tm *utc_tm,
+                                              int dst,
+                                              int gmtoff,
+                                              char **tz_name)
 {
-  GSList *l = country_tz_list;
+  GSList *l = country_tz_name_list;
   char *tz;
   int i = 0;
-  struct tm tp; // [sp+10h] [bp-38h]@1
+  struct tm iter_time;
 
-  memset(&tp, 0, sizeof(tp));
+  memset(&iter_time, 0, sizeof(iter_time));
   *tz_name = 0;
 
   DO_LOG(LOG_DEBUG, "mcc_tz_find_tz_in_country_tz_list");
-  log_time("UTC time", tm);
+  log_tm("UTC time", utc_tm);
   DO_LOG(LOG_DEBUG, "gmtoff = %d, dst = %d", gmtoff, dst);
 
   while (l)
@@ -500,11 +502,12 @@ mcc_tz_find_tz_in_country_tz_list(struct tm *tm, int dst, int gmtoff,
     tz = (char *)l->data;
     DO_LOG(LOG_DEBUG, "iter: %s", tz);
 
-    if (internal_localtime_r_in(tm, &tp, tz))
+    if (internal_localtime_r_in(utc_tm, &iter_time, tz))
     {
-      log_time("iter time", &tp);
+      log_tm("iter time", &iter_time);
 
-      if (tp.tm_gmtoff == gmtoff && (dst == 100 || tp.tm_isdst == (dst != 0)))
+      if (iter_time.tm_gmtoff == gmtoff &&
+          (dst == 100 || iter_time.tm_isdst == (dst != 0)) )
       {
         DO_LOG(LOG_DEBUG, "TZ found: %s", tz);
 
@@ -522,10 +525,10 @@ mcc_tz_find_tz_in_country_tz_list(struct tm *tm, int dst, int gmtoff,
 
   if (i == 1)
     DO_LOG(LOG_DEBUG, "Good TZ found!");
-  else if (g_slist_length(country_tz_list) == 1)
+  else if (g_slist_length(country_tz_name_list) == 1)
   {
     DO_LOG(LOG_DEBUG, "Only TZ for country, so it shall be used");
-    *tz_name = (char *)country_tz_list->data;
+    *tz_name = (char *)country_tz_name_list->data;
   }
   else if (i <= 0)
   {
@@ -542,7 +545,7 @@ mcc_tz_find_tz_in_country_tz_list(struct tm *tm, int dst, int gmtoff,
 void
 mcc_tz_utils_quit(void)
 {
-  mcc_country_tz_list_free();
+  mcc_tz_destroy_country_tz_name_list();
   mcc_tz_remove_registration_change_match();
   set_operator_tz = NULL;
   handle_csd_net_time_change = NULL;

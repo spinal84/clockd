@@ -17,7 +17,7 @@ do {                                       \
 
 extern bool clockd_debug_mode;
 
-void log_time(const char *type, struct tm *tm);
-void dump_date(const char *tz);
+void log_tm(const char *tag, const struct tm *tm);
+void dump_date(const char *server_tz);
 
 #endif // LOGGING_H

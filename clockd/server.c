@@ -29,7 +29,7 @@
 #define CLOCKD_CONFIGURATION_FILE "/home/user/.clockd.conf"
 
 static DBusMessage *server_activate_net_time_cb(DBusMessage *msg);
-static DBusMessage *server_net_time_changed_cb(DBusMessage *msg);
+static DBusMessage *server_is_net_time_changed_cb(DBusMessage *msg);
 static DBusMessage *server_set_time_cb(DBusMessage *msg);
 static DBusMessage *server_set_tz_cb(DBusMessage *msg);
 static DBusMessage *server_set_autosync_cb(DBusMessage *msg);
@@ -70,7 +70,7 @@ static const struct server_callback server_callbacks[] =
   {CLOCKD_SET_TIME, server_set_time_cb},
   {CLOCKD_GET_TIME, server_get_time_cb},
   {CLOCKD_ACTIVATE_NET_TIME, server_activate_net_time_cb},
-  {CLOCKD_NET_TIME_CHANGED, server_net_time_changed_cb},
+  {CLOCKD_NET_TIME_CHANGED, server_is_net_time_changed_cb},
   {CLOCKD_GET_TIMEFMT, server_get_time_format_cb},
   {CLOCKD_SET_TIMEFMT, server_set_time_format_cb},
   {CLOCKD_GET_DEFAULT_TZ, server_get_default_tz_cb},
@@ -98,14 +98,14 @@ server_new_rsp(DBusMessage *msg, int type, ...)
 }
 
 static int
-server_send_time_change_notification(time_t tick)
+server_send_time_change_indication(time_t t)
 {
   DBusMessage *msg;
-  dbus_int64_t dbus64_tick = tick;
-  dbus_int64_t dbus32_tick = tick;
+  dbus_int64_t dbus64_tick = t;
+  dbus_int64_t dbus32_tick = t;
   int rv = -1;
 
-  was_dst = internal_get_dst(tick);
+  was_dst = internal_get_dst(t);
 
   DO_LOG(LOG_DEBUG, "sending OSSO time change notification");
 
@@ -156,7 +156,7 @@ server_send_time_change_notification(time_t tick)
   return rv;
 }
 
-signed int save_conf()
+static int save_conf()
 {
   FILE *fp;
   char buf[256];
@@ -212,19 +212,19 @@ handle_csd_net_time_change(DBusMessage *msg)
   bool tz_changed;
   int rv = -1;
   int tz_q; /* diff, quarters of an hour, between the local time and GMT, ‑47...+48 */
-  int is_dts;
+  int is_dst;
   char buf[64] = {0, };
   DBusMessageIter iter;
   struct tm tm_net;
   struct tm tm_utc;
   struct tm tm_old;
-  char etcgmt[8];
+  char etc_gmt[8];
   char *tz = NULL;
   time_t time_utc;
   time_t now;
   char *old_tz = NULL;
 
-  strcpy(etcgmt, "Etc/GMT");
+  strcpy(etc_gmt, "Etc/GMT");
   memset(&tm_net, 0, sizeof(tm_net));
   dbus_message_iter_init(msg, &iter);
 
@@ -234,17 +234,17 @@ handle_csd_net_time_change(DBusMessage *msg)
     goto out;
   }
 
-  log_time("NET", &tm_net);
+  log_tm("NET", &tm_net);
   tz_q = tm_net.tm_yday;
 
-  is_dts = tm_net.tm_isdst;
+  is_dst = tm_net.tm_isdst;
 
   now = internal_get_time();
 
   if (now == -1 || !localtime_r(&now, &tm_old))
     goto out;
 
-  log_time("OLD", &tm_old);
+  log_tm("OLD", &tm_old);
   memset(&tm_utc, 0, sizeof(tm_utc));
   tm_utc.tm_year = tm_net.tm_year;
   tm_utc.tm_mon = tm_net.tm_mon;
@@ -260,12 +260,12 @@ handle_csd_net_time_change(DBusMessage *msg)
     goto out;
   }
 
-  log_time("UTC", &tm_utc);
+  log_tm("UTC", &tm_utc);
 
   if (!localtime_r(&time_utc, &tm_old))
     goto out;
 
-  log_time("synced OLD", &tm_old);
+  log_tm("synced OLD", &tm_old);
 
   if (tz_q == 100)
   {
@@ -274,7 +274,10 @@ handle_csd_net_time_change(DBusMessage *msg)
     tz = saved_server_opertime_tz;
   }
   else
-    mcc_tz_find_tz_in_country_tz_list(&tm_utc, is_dts, 15 * 60  * tz_q, &tz);
+  {
+    mcc_tz_guess_tz_for_country_by_dst_and_offset(
+                                   &tm_utc, is_dst, 15 * 60  * tz_q, &tz);
+  }
 
   if (!tz)
   {
@@ -302,7 +305,7 @@ handle_csd_net_time_change(DBusMessage *msg)
   localtime_r(&time_utc, &tm_net);
   internal_tz_res(&old_tz);
 
-  log_time("NEW", &tm_net);
+  log_tm("NEW", &tm_net);
 
   DO_LOG(LOG_DEBUG, "timeoff: %+ld", time_utc - now);
   DO_LOG(LOG_DEBUG, "gmtoff: %ld -> %ld", tm_old.tm_gmtoff, tm_net.tm_gmtoff);
@@ -311,7 +314,7 @@ handle_csd_net_time_change(DBusMessage *msg)
   net_time_last_changed_ticks = times(0);
 
   if (tz == saved_server_opertime_tz ||
-      (((saved_server_opertime_tz[0] && !strstr(saved_server_opertime_tz, etcgmt)) || strstr(tz, etcgmt)) &&
+      (((saved_server_opertime_tz[0] && !strstr(saved_server_opertime_tz, etc_gmt)) || strstr(tz, etc_gmt)) &&
       tm_old.tm_gmtoff == tm_net.tm_gmtoff && mcc_tz_is_tz_name_in_country_tz_list(saved_server_opertime_tz)))
   {
     DO_LOG(LOG_DEBUG, "Corner case, saved_server_opertime_tz is kept unchanged");
@@ -350,14 +353,11 @@ handle_csd_net_time_change(DBusMessage *msg)
       rv = -1;
     }
 
-    internal_set_tz(server_tz);
+    internal_setenv_tz(server_tz);
   }
 
   if (time_changed | tz_changed)
-  {
-    server_send_time_change_notification(
-          time_changed ? internal_get_time() : 0);
-  }
+    server_send_time_change_indication(time_changed ? internal_get_time() : 0);
 
   save_conf();
   dump_date(server_tz);
@@ -383,7 +383,7 @@ server_activate_net_time_cb(DBusMessage *msg)
 }
 
 static DBusMessage *
-server_net_time_changed_cb(DBusMessage *msg)
+server_is_net_time_changed_cb(DBusMessage *msg)
 {
   dbus_int32_t net_time;
   char *tz = saved_server_opertime_tz;
@@ -434,7 +434,7 @@ server_set_time_cb(DBusMessage *msg)
   {
     dump_date(server_tz);
     save_conf();
-    server_send_time_change_notification(dbus_time);
+    server_send_time_change_indication(dbus_time);
   }
 
   return rsp;
@@ -465,7 +465,7 @@ server_set_tz_cb(DBusMessage *msg)
 
       if (success)
       {
-        if (internal_set_tz(tzname))
+        if (internal_setenv_tz(tzname))
           success = FALSE;
         else
         {
@@ -493,7 +493,7 @@ server_set_tz_cb(DBusMessage *msg)
   rsp = server_new_rsp(msg, DBUS_TYPE_BOOLEAN, &success, DBUS_TYPE_INVALID);
 
   if ( success )
-    server_send_time_change_notification(0);
+    server_send_time_change_indication(0);
 
   return rsp;
 }
@@ -521,7 +521,7 @@ server_set_autosync_cb(DBusMessage *msg)
       if (autosync && net_time_changed_time)
         set_network_time(false);
 
-      mcc_tz_add_registration_change_match();
+      mcc_tz_setup_timezone_from_mcc_if_required();
 
       if (!save_conf())
         success = TRUE;
@@ -537,7 +537,7 @@ server_set_autosync_cb(DBusMessage *msg)
   dbus_error_free(&error);
 
   if (success)
-    server_send_time_change_notification(0);
+    server_send_time_change_indication(0);
 
   return rsp;
 }
@@ -579,7 +579,7 @@ server_set_time_format_cb(DBusMessage *msg)
   rsp = server_new_rsp(msg, DBUS_TYPE_BOOLEAN, &success, DBUS_TYPE_INVALID);
 
   if (success)
-    server_send_time_change_notification(0);
+    server_send_time_change_indication(0);
 
   return rsp;
 }
@@ -788,11 +788,11 @@ server_set_operator_tz_cb(const char *tz)
     DO_LOG(LOG_DEBUG,
            "server_set_operator_tz_cb(): set_tz returned error code =  %d", st);
 
-    internal_set_tz(server_tz);
+    internal_setenv_tz(server_tz);
     dump_date(server_tz);
     save_conf();
     next_dst_change(time(0), false);
-    server_send_time_change_notification(0);
+    server_send_time_change_indication(0);
   }
   else
     DO_LOG(LOG_ERR, "server_set_operator_tz_cb(): tz = <null> !!!");
@@ -807,7 +807,7 @@ handle_alarm()
   if (was_dst != internal_get_dst(0))
   {
     DO_LOG(LOG_INFO, "DST changed to %s", internal_get_dst(0) ? "on" : "off");
-    server_send_time_change_notification(internal_get_time());
+    server_send_time_change_indication(internal_get_time());
   }
 
   next_dst_change(time(0), false);
@@ -874,7 +874,7 @@ set_network_time(bool save_config)
     {
       snprintf(server_tz, sizeof(server_tz), "/%s", &saved_server_opertime_tz[1]);
       set_net_timezone(server_tz);
-      internal_set_tz(server_tz);
+      internal_setenv_tz(server_tz);
     }
 
     dump_date(server_tz);
@@ -882,7 +882,7 @@ set_network_time(bool save_config)
     if (save_config)
     {
       save_conf();
-      server_send_time_change_notification(t);
+      server_send_time_change_indication(t);
     }
 
     rv = 0;
@@ -1092,7 +1092,7 @@ server_init()
   }
 
   if (server_tz[0])
-    internal_set_tz(server_tz);
+    internal_setenv_tz(server_tz);
   else
   {
     char buf[512];
@@ -1111,7 +1111,7 @@ server_init()
         snprintf(server_tz, sizeof(server_tz), ":%s", buf);
     }
 
-    internal_set_tz(":/etc/localtime");
+    internal_setenv_tz(":/etc/localtime");
   }
 
   DO_LOG(LOG_DEBUG,
