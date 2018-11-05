@@ -200,36 +200,41 @@ mcc_tz_set_tz_from_mcc()
 }
 
 static void
-mcc_tz_handle_network_timeinfo_reply(DBusPendingCall *pending, void *user_data)
+mcc_tz_handle_network_timeinfo_reply(DBusMessage *msg)
 {
   DBusError error = DBUS_ERROR_INIT;
   const char *err_msg = NULL;
-  DBusMessage *reply = dbus_pending_call_steal_reply(pending);
 
-  if (reply)
+  if (dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_ERROR)
   {
-    if (dbus_message_get_type(reply) == DBUS_MESSAGE_TYPE_ERROR)
+    if (dbus_message_get_args(msg, &error, DBUS_TYPE_STRING, &err_msg,
+                              DBUS_TYPE_INVALID))
     {
-      if (dbus_message_get_args(reply, &error, DBUS_TYPE_STRING, &err_msg,
-                                DBUS_TYPE_INVALID))
-      {
-        DO_LOG(LOG_ERR, "D-Bus call failed: %s", err_msg);
-      }
-      else
-        DO_LOG(LOG_ERR, "Failed to get error reply argument, msg = %s",
-               error.message);
-
-      dbus_error_free(&error);
+      DO_LOG(LOG_ERR, "D-Bus call failed: %s", err_msg);
     }
-    else if (get_autosync_enabled() && handle_csd_net_time_change(reply) == -1)
-      mcc_tz_set_tz_from_mcc();
+    else
+      DO_LOG(LOG_ERR, "Failed to get error reply argument, msg = %s",
+             error.message);
 
-    dbus_message_unref(reply);
+    dbus_error_free(&error);
   }
+  else if (get_autosync_enabled() && handle_csd_net_time_change(msg) == -1)
+    mcc_tz_set_tz_from_mcc();
+
+  dbus_message_unref(msg);
+}
+
+static void
+mcc_tz_network_timeinfo_reply_dbus_cb(DBusPendingCall *pending, void *user_data)
+{
+  DBusMessage *msg = dbus_pending_call_steal_reply(pending);
+
+  if (msg)
+    mcc_tz_handle_network_timeinfo_reply(msg);
   else
   {
     DO_LOG(LOG_ERR,
-           "mcc_tz_handle_network_timeinfo_reply: but no pending call available");
+         "mcc_tz_handle_network_timeinfo_reply: but no pending call available");
   }
 
   dbus_pending_call_unref(pending);
@@ -296,7 +301,7 @@ mcc_tz_handle_registration_status_reply(struct DBusMessage *msg)
           dbus_connection_flush(system_bus);
 
           if (!dbus_pending_call_set_notify(pending,
-                              mcc_tz_handle_network_timeinfo_reply, NULL, NULL))
+                            mcc_tz_network_timeinfo_reply_dbus_cb, NULL, NULL))
           {
             DO_LOG(LOG_ERR,
                    "dbus_connection_send_with_reply error - no memory");
