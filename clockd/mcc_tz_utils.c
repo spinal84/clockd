@@ -260,8 +260,10 @@ mcc_tz_handle_network_timeinfo_reply(DBusMessage *msg)
       DO_LOG(LOG_ERR, "D-Bus call failed: %s", err_msg);
     }
     else
+    {
       DO_LOG(LOG_ERR, "Failed to get error reply argument, msg = %s",
              error.message);
+    }
 
     dbus_error_free(&error);
   }

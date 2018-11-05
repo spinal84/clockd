@@ -1,8 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-int server_init (void);
-void server_quit (void);
+int server_init(void);
+void server_quit(void);
 
 struct server_callback
 {
