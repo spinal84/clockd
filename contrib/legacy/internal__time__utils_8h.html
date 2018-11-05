@@ -232,7 +232,7 @@ Set system timezone<p>
 Utility function used to set timezone temporarily. It is needed to calculate time in timezone different from system one. It is used in pair with internal_tz_res which restores previous timezone.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>old</em>&nbsp;</td><td>Pointer to store current timezone name until internal_tz_res called Note: the memory is allocated for this purpose. It will be freed automatically inside internal_tz_res. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>old</em>&nbsp;</td><td>Pointer to store current timezone name until internal_tz_res called. Note: the memory is allocated for this purpose. It will be freed automatically inside internal_tz_res. </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>tz</em>&nbsp;</td><td>Temporal timezone </td></tr>
   </table>
 </dl>
@@ -261,7 +261,7 @@ Utility function used to set timezone temporarily. It is needed to calculate tim
 Utility function used to restore previous timezone changed by internal_tz_set.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>old</em>&nbsp;</td><td>Pointer to timezone name which was provided by internal_tz_set Note: the memory allocated to store the name is freed after call of internal_tz_res. The pointer becomes 0 at the end. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>old</em>&nbsp;</td><td>Pointer to timezone name which was provided by internal_tz_set. Note: the memory allocated to store the name is freed after call of internal_tz_res. The pointer becomes 0 at the end. </td></tr>
   </table>
 </dl>
 
@@ -373,7 +373,7 @@ Converts UTC time into local time for given timezone<p>
 <div class="memdoc">
 
 <p>
-Set TZ environment variable and re-init time module of glibc to use given timezone. If required it converts timezone from internal clockd fromat to known by glibc.<p>
+Set TZ environment variable and re-init time module of glibc to use given timezone. If required it converts timezone from internal clockd format to known by glibc.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tzname</em>&nbsp;</td><td>Time zone variable</td></tr>
