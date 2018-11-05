@@ -211,20 +211,20 @@ handle_csd_net_time_change(DBusMessage *msg)
   bool time_changed;
   bool tz_changed;
   int rv = -1;
-  int tz_q; /* diff, quarters of an hour, between the local time and GMT, ‑47...+48 */
+  /* diff, quarters of an hour, between the local time and GMT, ‑47...+48 */
+  int tz_q;
   int is_dst;
   char buf[64] = {0, };
   DBusMessageIter iter;
   struct tm tm_net;
   struct tm tm_utc;
   struct tm tm_old;
-  char etc_gmt[8];
+  char etc_gmt[] = "Etc/GMT";
   char *tz = NULL;
   time_t time_utc;
   time_t now;
   char *old_tz = NULL;
 
-  strcpy(etc_gmt, "Etc/GMT");
   memset(&tm_net, 0, sizeof(tm_net));
   dbus_message_iter_init(msg, &iter);
 
@@ -253,7 +253,7 @@ handle_csd_net_time_change(DBusMessage *msg)
   tm_utc.tm_min = tm_net.tm_min;
   tm_utc.tm_sec = tm_net.tm_sec;
 
-  time_utc = internal_mktime_in(&tm_utc, 0);
+  time_utc = internal_mktime_in(&tm_utc, NULL);
   if (time_utc == -1)
   {
     DO_LOG(LOG_ERR, "handle_csd_net_time_change(), time evaluation failed");
@@ -291,7 +291,7 @@ handle_csd_net_time_change(DBusMessage *msg)
       snprintf(buf, sizeof(buf), ":Etc/GMT%c%d:%d", sign, h, m);
     else
     {
-      if (!h)
+      if (h == 0)
         snprintf(buf, sizeof(buf), ":Etc/GMT");
       else
         snprintf(buf, sizeof(buf), ":Etc/GMT%c%d", sign, h);

@@ -520,7 +520,7 @@ mcc_tz_find_tz_in_country_tz_list(struct tm *utc_tm,
   struct tm iter_time;
 
   memset(&iter_time, 0, sizeof(iter_time));
-  *tz_name = 0;
+  *tz_name = NULL;
 
   DO_LOG(LOG_DEBUG, "mcc_tz_find_tz_in_country_tz_list");
   log_tm("UTC time", utc_tm);
