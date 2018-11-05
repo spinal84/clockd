@@ -27,19 +27,8 @@ static bool registration_status_change_dbus_handler_installed = false;
 static void
 mcc_tz_destroy_country_tz_name_list()
 {
-  GSList *prev;
-
-  while (true)
-  {
-    prev = country_tz_name_list;
-
-    if (!prev)
-      break;
-
-    country_tz_name_list = country_tz_name_list->next;
-    free(prev->data);
-    g_slist_free_1(prev);
-  }
+  g_slist_free_full(country_tz_name_list, free);
+  country_tz_name_list = NULL;
 }
 
 static gint
