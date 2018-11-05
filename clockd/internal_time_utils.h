@@ -1,6 +1,7 @@
 #ifndef INTERNAL_TIME_UTILS_H
 #define INTERNAL_TIME_UTILS_H
 
+int internal_set_tz(const char *tz);
 void internal_tz_set(char **old, const char *tz);
 void internal_tz_res(char **old);
 int internal_set_time(time_t t);

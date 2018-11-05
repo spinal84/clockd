@@ -13,6 +13,25 @@
 static int days[3] = {1, 1, 31};
 static int months[3] = {0, 6, 11};
 
+int
+internal_set_tz(const char *tz)
+{
+  int rv;
+  char buf[512];
+
+  snprintf(buf, sizeof(buf), "/usr/bin/rclockd clockd %s", tz);
+
+  rv = system(buf);
+
+  if (rv)
+  {
+    DO_LOG(LOG_ERR, "set_tz(), system(%s) failed (st=%d/%s)", buf, rv,
+           rv == -1 ? strerror(errno) : "");
+  }
+
+  return rv;
+}
+
 void
 internal_tz_set(char **old, const char *tz)
 {

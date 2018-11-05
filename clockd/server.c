@@ -41,7 +41,6 @@ static DBusMessage *server_get_autosync_cb(DBusMessage *msg);
 static DBusMessage *server_have_opertime_cb(DBusMessage *msg);
 static DBusMessage *server_get_time_cb(DBusMessage *msg);
 
-static int set_tz(const char *tzname);
 static int server_set_time(time_t tick);
 static void next_dst_change(time_t tick, bool keep_alarm_timer);
 static void server_set_operator_tz_cb(const char *tz);
@@ -457,7 +456,7 @@ server_set_tz_cb(DBusMessage *msg)
     {
       if (*tzname == ':')
       {
-        if (!set_tz(tzname))
+        if (!internal_set_tz(tzname))
           success = 1;
       }
       else
@@ -710,25 +709,6 @@ server_filter(DBusConnection *conn, DBusMessage *msg, void *user_data)
 }
 
 static int
-set_tz(const char *tzname)
-{
-  int rv;
-  char buf[512];
-
-  snprintf(buf, sizeof(buf), "/usr/bin/rclockd clockd %s", tzname);
-
-  rv = system(buf);
-
-  if (rv)
-  {
-    DO_LOG(LOG_ERR, "set_tz(), system(%s) failed (st=%d/%s)", buf, rv,
-           rv == -1 ? strerror(errno) : "");
-  }
-
-  return rv;
-}
-
-static int
 set_net_timezone(const char *tzname)
 {
   char buf[256];
@@ -747,7 +727,7 @@ set_net_timezone(const char *tzname)
 
   DO_LOG(LOG_DEBUG, "zone '%s' exists", buf);
 
-  if (!set_tz(tzname))
+  if (!internal_set_tz(tzname))
   {
     next_dst_change(time(0), 0);
     return 0;
@@ -783,7 +763,7 @@ server_set_operator_tz_cb(const char *tz)
     snprintf(saved_server_opertime_tz, sizeof(saved_server_opertime_tz), ":%s",
              tz);
     snprintf(server_tz, sizeof(server_tz) - 1, "/%s", &saved_server_opertime_tz[1]);
-    st = set_tz(server_tz);
+    st = internal_set_tz(server_tz);
 
     DO_LOG(LOG_DEBUG,
            "server_set_operator_tz_cb(): set_tz returned error code =  %d", st);
@@ -1086,7 +1066,7 @@ server_init()
 
   if (restore_tz[0])
   {
-    set_tz(restore_tz);
+    internal_set_tz(restore_tz);
     restore_tz[0] = 0;
     save_conf();
   }
