@@ -124,9 +124,9 @@ mcc_tz_remove_registration_change_match()
 static char *
 mcc_tz_find_country_by_mcc(unsigned int mcc)
 {
+  FILE *fp;
   char buf[1024];
   char *country = NULL;
-  FILE * fp;
   unsigned int mcc_found = 0;
 
   fp = fopen("/usr/share/operator-wizard/mcc_mapping", "r");
@@ -142,32 +142,36 @@ mcc_tz_find_country_by_mcc(unsigned int mcc)
   {
     while (true)
     {
-      gchar *p;
+      gchar *tab_ptr;
 
       if (!fgets(buf, sizeof(buf), fp))
-        goto out;
-
-      if ((p = g_utf8_strrchr(buf, -1, 9)))
       {
-        const gchar *q;
-        char mccstr[4];
+        /* Prevent segfault if that's not the first loop iteration */
+        country = NULL;
+        goto out;
+      }
 
-        country = g_utf8_find_next_char(p, 0);
+      tab_ptr = g_utf8_strrchr(buf, -1, '\t');
 
-        if ((q = g_utf8_strrchr(p, strlen(p) + 1, 0x0d)))
-          *p = 0;
+      if (tab_ptr)
+      {
+        const gchar *ptr;
+        char mcc_str[4];
+
+        country = g_utf8_find_next_char(tab_ptr, NULL);
+
+        if (g_utf8_strrchr(tab_ptr, strlen(tab_ptr) + 1, '\r'))
+          tab_ptr[0] = 0;
         else
-          p[strlen(p) - 1] = 0;
+          tab_ptr[strlen(tab_ptr) - 1] = 0;
 
-         mccstr[0] = g_utf8_get_char(buf);
+         mcc_str[0] = g_utf8_get_char(buf);
+         ptr = g_utf8_find_next_char(buf, NULL);
+         mcc_str[1] = g_utf8_get_char(ptr);
+         mcc_str[2] = g_utf8_get_char(g_utf8_find_next_char(ptr, NULL));
+         mcc_str[3] = 0;
 
-         q = g_utf8_find_next_char(buf, 0);
-
-         mccstr[1] = g_utf8_get_char(q);
-         mccstr[2] = g_utf8_get_char(g_utf8_find_next_char(q, 0));
-         mccstr[3] = 0;
-
-         mcc_found = strtol(mccstr, 0, 10);
+         mcc_found = strtol(mcc_str, NULL, 10);
 
          if (country && mcc_found)
            break;
@@ -184,9 +188,7 @@ mcc_tz_find_country_by_mcc(unsigned int mcc)
   country = strdup(country);
 
 out:
-  if (fp)
-    fclose(fp);
-
+  fclose(fp);
   return country;
 }
 
