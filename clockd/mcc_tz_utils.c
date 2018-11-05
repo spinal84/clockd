@@ -121,29 +121,6 @@ mcc_tz_remove_registration_change_match()
   dbus_error_free(&error);
 }
 
-static void
-mcc_tz_dump_country_list()
-{
-  if (clockd_debug_mode)
-  {
-    GSList *l = country_tz_name_list;
-
-    if (country_tz_name_list)
-    {
-      DO_LOG(LOG_DEBUG, "GSList count = %d", g_slist_length(country_tz_name_list));
-
-      do
-      {
-        DO_LOG(LOG_DEBUG, "%s", (char *)l->data);
-        l = l->next;
-      }
-      while (l);
-    }
-    else
-      DO_LOG(LOG_DEBUG, "GSList empty");
-  }
-}
-
 static char *
 mcc_tz_find_country_by_mcc(unsigned int mcc)
 {
@@ -297,7 +274,7 @@ mcc_tz_handle_registration_status_reply(struct DBusMessage *msg)
         if (country)
         {
           cityinfo_foreach(mcc_tz_searching_tz_by_country_name, country);
-          mcc_tz_dump_country_list();
+          DO_LOG_STR_SLIST(LOG_DEBUG, country_tz_name_list);
           free(country);
         }
 
