@@ -13,6 +13,25 @@
 static int days[3] = {1, 1, 31};
 static int months[3] = {0, 6, 11};
 
+int
+internal_set_tz(const char *tz)
+{
+  int rv;
+  char buf[512];
+
+  snprintf(buf, sizeof(buf), "/usr/bin/rclockd clockd %s", tz);
+
+  rv = system(buf);
+
+  if (rv)
+  {
+    DO_LOG(LOG_ERR, "set_tz(), system(%s) failed (st=%d/%s)", buf, rv,
+           rv == -1 ? strerror(errno) : "");
+  }
+
+  return rv;
+}
+
 void
 internal_tz_set(char **old, const char *tz)
 {
@@ -25,14 +44,14 @@ internal_tz_set(char **old, const char *tz)
 
   *old = tzname;
 
-  internal_set_tz(tz);
+  internal_setenv_tz(tz);
 }
 
 void
 internal_tz_res(char **old)
 {
   if (*old)
-    internal_set_tz(*old);
+    internal_setenv_tz(*old);
   else
   {
     unsetenv("TZ");
@@ -97,22 +116,22 @@ internal_check_timezone(const char *zone)
 }
 
 int
-internal_set_tz(const char *tz)
+internal_setenv_tz(const char *tzname)
 {
   int rv;
   char buf[256] = {0, };
 
   memcpy(buf, "UTC", 4);
 
-  if (tz)
+  if (tzname)
   {
-    if (*tz != ':' && !isalpha(*tz))
-      snprintf(buf, sizeof(buf), ":%s", tz + 1);
+    if (tzname[0] != ':' && !isalpha(tzname[0]))
+      snprintf(buf, sizeof(buf), ":%s", tzname + 1);
   }
 
-  tz = buf;
+  tzname = buf;
 
-  rv = setenv("TZ", tz, 1);
+  rv = setenv("TZ", tzname, 1);
   if ( !rv )
     tzset();
 
@@ -190,17 +209,17 @@ internal_tz_cmp(const char *firstTZName, const char *secondTZName)
   return rv;
 }
 
-bool
-internal_get_dst(time_t timer)
+int
+internal_get_dst(time_t tick)
 {
   struct tm tm;
 
   memset(&tm, 0, sizeof(tm));
 
-  if (!timer)
-    timer = internal_get_time();
+  if (!tick)
+    tick = internal_get_time();
 
-  localtime_r(&timer, &tm);
+  localtime_r(&tick, &tm);
 
   return tm.tm_isdst > 0;
 }
