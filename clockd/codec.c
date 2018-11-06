@@ -5,17 +5,6 @@
 #include "logging.h"
 
 int
-encode_int(DBusMessageIter *iter, int *pval)
-{
-  dbus_int32_t dbus_val = *pval;
-
-  if (dbus_message_iter_append_basic(iter, DBUS_TYPE_INT32, &dbus_val))
-    return 0;
-
-  return -1;
-}
-
-int
 decode_int(DBusMessageIter *iter, int *pval)
 {
   int type;
@@ -32,27 +21,6 @@ decode_int(DBusMessageIter *iter, int *pval)
   }
 
   *pval = dbus_val;
-
-  return rv;
-}
-
-int
-encode_tm(DBusMessageIter *iter, struct tm *tm)
-{
-  int rv = 0;
-
-  if (encode_int(iter, &tm->tm_sec) ||
-      encode_int(iter, &tm->tm_min) ||
-      encode_int(iter, &tm->tm_hour) ||
-      encode_int(iter, &tm->tm_mday) ||
-      encode_int(iter, &tm->tm_mon) ||
-      encode_int(iter, &tm->tm_year) ||
-      encode_int(iter, &tm->tm_wday) ||
-      encode_int(iter, &tm->tm_yday) ||
-      encode_int(iter, &tm->tm_isdst))
-  {
-    rv = -1;
-  }
 
   return rv;
 }
