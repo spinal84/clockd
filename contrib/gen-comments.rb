@@ -892,7 +892,6 @@ class CommentsHandler
 	    long_comment = long_comment || @engaged_files.find{|f| true}
 	    @head_comment.long = long_comment.path if long_comment
 	    @engaged_files.each do |f|
-		next ##!DEBUG
 		puts "\nHead comment for #{f.path}"
 		@@extracted += 1
 		if f.head_comment
