@@ -138,7 +138,13 @@ class StringComment
 		prefix = ''
 	    end
 
-	    return result + " */"
+	    if result[-4, 4] == "\n *\n"
+		# We have newline forced on the last line, fix it
+		result[-1] = '/'
+		return result
+	    else
+		return result + " */"
+	    end
 	end
 
 	# HeadComment
