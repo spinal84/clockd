@@ -753,7 +753,11 @@ class SourceFile
 	if range
 	    content[range] = c.text
 	else
-	    content.insert(c.declaration_pos(ss), c.text + "\n")
+	    declaration_pos = c.declaration_pos(ss)
+	    pre_nl = ''
+	    # Separate comment from previous code
+	    pre_nl = "\n" if declaration_pos > 0 && content[declaration_pos - 2] != "\n"
+	    content.insert(declaration_pos, pre_nl + c.text + "\n")
 	end
 	clear_cache
     end
