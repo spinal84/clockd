@@ -7,7 +7,5 @@
 int decode_int (DBusMessageIter *iter, int *pval);
 int decode_tm (DBusMessageIter *iter, struct tm *tm);
 int decode_ctm (DBusMessageIter *iter, struct tm *tm);
-int encode_tm(DBusMessageIter *iter, struct tm *tm);
-int encode_int(DBusMessageIter *iter, int *pval);
 
 #endif // CODEC_H
