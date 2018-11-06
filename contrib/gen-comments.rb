@@ -465,26 +465,21 @@ class HeadComment
     attr_writer :long
 
     # file - source code file where we want the head comment to be put
-    # long - do we want full group description in the head comment?
-    def comment(file = nil)
+    # (@long == file) if we want full group description in the head comment
+    def text(file = nil)
+	@sc = nil
 	if file_reference?
-	    @comment = "/**\n"
-	    @comment << "@brief #{brief}\n\n" if brief
-	    @comment << file_desc.strip << "\n */"
+	    sc << '@brief' << brief if brief
+	    file_desc()
 	else
 	    return nil if group.nil?
-	    @comment = "/**\n"
-	    if file
-		desc = file_desc(file)
-		@comment << "#{desc}".strip << "\n\n" if desc
-	    end
-	    @comment << "@addtogroup #{group} #{group_title}" if group
-	    @comment << "\n\n" + wrap_pre(group_details).strip if @long == file and group_details
-	    @comment << "\n\n@ingroup #{parent_group}" if parent_group
-	    @comment << "\n\n * @{ */"
+	    file_desc(file) if file
+	    sc << "@addtogroup" << "#{group} #{group_title}"
+	    sc << group_details if @long == file and group_details
+	    sc << "@ingroup" << parent_group if parent_group
+	    sc << "@{"
 	end
-    rescue
-	@comment = nil
+	sc.to_s
     end
 
     def brief
@@ -549,39 +544,48 @@ class HeadComment
 	    page = Nokogiri::HTML.parse(File.open file_doxy)
 	end
 	file = File.basename(page.css('h1').first.child.text.sub(/ File Reference/, ''))
+
 	desc = page.css('[name=_details]')[0].next.next.text.gsub(/[ \s]+/, ' ').strip
 	if desc =~ /^copyright\s/i
 	    copyright = "#{wrap(desc.sub(/^copyright\s+/i, ''))}"
-	    desc = "@file #{file}"
-	elsif "@file #{file} #{desc}".length > WRAP
-	    desc_wrapped = wrap(desc).strip
-	    newlines = desc_wrapped.lines.size > 1 ? "\n\n" : "\n"
-	    desc = "@file #{file}" + newlines + desc_wrapped
-	elsif !desc.empty?
-	    desc = "@file #{file} #{desc}"
-	else
-	    desc = "@file #{file}"
+	    desc = ''
 	end
+
+	if desc.empty?
+	    sc << '@file' << file
+	else
+	    sc << '@file' << file << desc
+	end
+
 	# Authors parsing
 	authors = page.css('.author dd').map{|a| a.text.gsub(/[  \t]+/, ' ').strip.lines}.flatten
 	authors = authors.map{|a| a.strip}.uniq
+
 	# Add GPL copyright, skip adding authors
 	copyright = 'GNU GPLv2 or later'
 	authors   = []
+
+	# Add authors and copyright to the comment
 	if authors.any?
 	    if authors.size > 1
-		desc << "\n\n@authors " << authors.join("\n	 ")
+		sc << '@authors' << authors.join("\n      ")
 	    else
-		desc << "\n\n@author " + authors[0]
+		sc << '@author' << authors[0]
 	    end
 	end
-	desc << "\n\n@copyright #{copyright}" if copyright
+	sc << '@copyright' << copyright if copyright
 	desc
     rescue
 	nil
     end
 
     private
+    # StringComment instance
+    def sc
+	return @sc if @sc
+	@sc = StringComment.new
+    end
+
     def get_group(file)
 	return nil if file !~ /^group_/
 	file.gsub(/_+/, '_').gsub(/^group_|\..*$/, '')
@@ -887,21 +891,21 @@ class CommentsHandler
 		puts "\nHead comment for #{f.path}"
 		@@extracted += 1
 		if f.head_comment
-		    if f.head_comment == @head_comment.comment(f.path)
+		    if f.head_comment == @head_comment.text(f.path)
 			puts "Skipping: same as parsed."
 			@@same += 1
 		    else
 			puts "\nHead comment from the source:\n#{f.head_comment}\n\n" +
-			    "Head comment parsed from HTML:\n#{@head_comment.comment(f.path)}"
+			    "Head comment parsed from HTML:\n#{@head_comment.text(f.path)}"
 			print "\n  Replace?"
 			if read_yn
-			   f.head_comment = @head_comment.comment(f.path)
+			   f.head_comment = @head_comment.text(f.path)
 			    @@replaced += 1
 			end
 		    end
 		else
-		    puts "\nHead comment parsed from HTML:\n#{@head_comment.comment(f.path)}"
-		    f.head_comment = @head_comment.comment(f.path)
+		    puts "\nHead comment parsed from HTML:\n#{@head_comment.text(f.path)}"
+		    f.head_comment = @head_comment.text(f.path)
 		    @@injected += 1
 		end
 	    end

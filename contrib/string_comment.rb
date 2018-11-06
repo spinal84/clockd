@@ -141,6 +141,55 @@ class StringComment
 	    return result + " */"
 	end
 
+	# HeadComment
+	if @type == :none
+	    tag = nil
+	    result = "/**\n"
+	    @strings.each do |s|
+		if s[0] == '@'
+		    tag = s[1..-1]
+		    if first_line
+			result << s
+			first_line = false
+		    else
+			result << "\n\n" + s
+		    end
+		    next
+		end
+
+		if tag
+		    if tag == 'file_desc'
+			if (result.lines.last + ' ' + s).length > @@wrap
+			    if s.length > @@wrap
+				result << "\n\n" + s.wrap(@@wrap).strip
+			    else
+				result << "\n" + s
+			    end
+			else
+			    result << ' '+ s
+			end
+			tag = nil
+		    else
+			result << ' '+ s
+		    end
+
+		    if tag == 'file'
+			tag = 'file_desc'
+		    else
+			tag = nil
+		    end
+		else
+		    result << "\n\n" + s
+		end
+	    end
+
+	    if tag == '@{'
+		return result + " */"
+	    else
+		return result + "\n */"
+	    end
+	end
+
 	# Enum, Struct, Variable, Typedef, Define
 	@strings.each do |s|
 	    if s[0] == '@'
