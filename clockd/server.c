@@ -28,6 +28,12 @@
 
 #define CLOCKD_CONFIGURATION_FILE "/home/user/.clockd.conf"
 
+struct server_callback
+{
+  const char *member;
+  DBusMessage *(*callback)(DBusMessage *method_call);
+};
+
 static DBusMessage *server_activate_net_time_cb(DBusMessage *msg);
 static DBusMessage *server_is_net_time_changed_cb(DBusMessage *msg);
 static DBusMessage *server_set_time_cb(DBusMessage *msg);
