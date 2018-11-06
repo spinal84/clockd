@@ -112,6 +112,11 @@ class Comment
 	@file = $1
     end
 
+    # Is source file a header?
+    def header?
+	file !~ /\.c$/
+    end
+
     # Head extracted from HTML.
     # Needed for searching in the source code.
     def head
@@ -148,12 +153,16 @@ class Comment
 	    string = '(const\s+)?' + string if string !~ /^(static|const)\\s\+/
 	end
 
-	if type == :Function or type == :Variable
+	if type == :Function or type == :Variable and !header?
 	    string = '(static\s+)?' + string if string !~ /^static\\s\+/
 	end
 
 	if type == :Function
-	    string = '(inline\s+)?' + string + '\s*\([^\)]*\)\s*\{'
+	    if header?
+		string = string + '\s*\([^\)]*\)\s*;'
+	    else
+		string = '(inline\s+)?' + string + '\s*\([^\)]*\)\s*\{'
+	    end
 	elsif type == :'Enumeration Type'
 	    string += '\s*\{'
 	elsif type == :Define
@@ -711,7 +720,7 @@ class SourceFile
 
     # Set head comment or change its contents
     def head_comment=(c)
-	head_comment_prep
+	head_comment_prep(c)
 	content[all_comments[head_index]] = c
 	clear_cache
     end
@@ -755,7 +764,7 @@ class SourceFile
     end
 
     # If there's no head comment in the file, we add a template
-    def head_comment_prep
+    def head_comment_prep(c)
 	return if head_index
 	if @path =~ /\.h(\.in)?$/
 	    # /** @{ */
@@ -763,12 +772,14 @@ class SourceFile
 	    regex = Regexp.new(define_regex_str)
 	    content.sub!(regex, "\\1\n\n/** @{ */\n\n")
 	    # /** @} */
-	    start_pos = end_pos = content.rindex /^#endif\b/
-	    start_pos -= 1 while content[start_pos - 1] =~ /\s/
-	    content[start_pos...end_pos] = "\n\n/** @} */\n\n"
+	    if c =~ /@{/
+		start_pos = end_pos = content.rindex /^#endif\b/
+		start_pos -= 1 while content[start_pos - 1] =~ /\s/
+		content[start_pos...end_pos] = "\n\n/** @} */\n\n"
+	    end
 	else  # *.c
 	    content.insert(0, "/** @{ */\n\n")
-	    content.insert(-1, "\n/** @} */\n")
+	    content.insert(-1, "\n/** @} */\n") if c =~ /@{/
 	end
 	clear_cache
     end
