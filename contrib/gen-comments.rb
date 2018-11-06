@@ -452,7 +452,7 @@ class StructMemberComment < EnumComment
     end
 end
 
-# Head comment for the file class
+# Head comment for the file
 class HeadComment
     # file - path to html file
     # page - nokogiri parsed page
@@ -469,6 +469,7 @@ class HeadComment
     def comment(file = nil)
 	if file_reference?
 	    @comment = "/**\n"
+	    @comment << "@brief #{brief}\n\n" if brief
 	    @comment << file_desc.strip << "\n */"
 	else
 	    return nil if group.nil?
@@ -486,13 +487,24 @@ class HeadComment
 	@comment = nil
     end
 
-    # @group extracted from HTML
+    def brief
+	return @brief if @brief or not file_reference?
+	brief_nodes = @page.css('h1')
+	return nil if brief_nodes.size != 1
+	while brief_nodes.last.next.name != 'code' and brief_nodes.last.next.name != 'p'
+	    brief_nodes << brief_nodes.last.next
+	end
+	brief_nodes.shift
+	@brief = brief_nodes.text.strip.sub(/ More\.\.\./, '')
+    end
+
+    # Group name extracted from HTML
     def group
 	return @group if @group
 	@group = get_group(@filename)
     end
 
-    # ...
+    # The comment should look like "@addtogroup <group> <group_title>"
     def group_title
 	return @group_title if @group_title
 	node = @page.css('h1')[0]
@@ -503,7 +515,7 @@ class HeadComment
 	nil
     end
 
-    # The description of the @group
+    # The description of the @group (comes after @addtogroup)
     def group_details
 	return @group_details if @group_details
 	details = @page.css('[name=_details]')
