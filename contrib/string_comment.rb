@@ -144,33 +144,36 @@ class StringComment
 	# HeadComment
 	if @type == :none
 	    tag = nil
+	    wide = false
 	    result = "/**\n"
 	    @strings.each do |s|
 		if s[0] == '@'
+		    # Insert tag (@...)
 		    tag = s[1..-1]
 		    if first_line
-			result << s
+			result << ' * ' + s
 			first_line = false
 		    else
-			result << "\n\n" + s
+			result << "\n *\n * " + s
 		    end
 		    next
 		end
 
 		if tag
 		    if tag == 'file_desc'
-			if (result.lines.last + ' ' + s).length > @@wrap
-			    if s.length > @@wrap
-				result << "\n\n" + s.wrap(@@wrap).strip
-			    else
-				result << "\n" + s
-			    end
+			wide = true
+			if s.length > @@wrap
+			    wrapped = s.wrap(@@wrap - 3).lines.map{|l| ' * ' + l}.join.rstrip
+			    result << "\n *\n" + wrapped
 			else
-			    result << ' '+ s
+			    result << "\n * " + s
 			end
 			tag = nil
+		    elsif tag == 'file' and result.lines.size > 2
+			# We wanna have @brief and @file the same width
+			result << '  ' + s
 		    else
-			result << ' '+ s
+			result << ' ' + s
 		    end
 
 		    if tag == 'file'
@@ -179,15 +182,19 @@ class StringComment
 			tag = nil
 		    end
 		else
-		    result << "\n\n" + s
+		    wide = true
+		    wrapped = s.wrap(@@wrap - 3).lines.map{|l| ' * ' + l}.join.rstrip
+		    result << "\n *\n" + wrapped
 		end
 	    end
 
-	    if tag == '@{'
-		return result + " */"
-	    else
-		return result + "\n */"
-	    end
+	    # Close the comment
+	    result += (tag == '@{' ? " */" : "\n */")
+
+	    # Remove empty lines if the comment is not wide
+	    result = result.lines.select{|l| l !~ /^ \*$/}.join if not wide
+
+	    return result
 	end
 
 	# Enum, Struct, Variable, Typedef, Define
