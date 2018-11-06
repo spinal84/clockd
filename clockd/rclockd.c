@@ -45,6 +45,7 @@ set_time(const char *s)
 
   if (settimeofday(&tv, NULL))
   {
+    /* See man 4 rtc */
     time_t timer = sec;
     int fd = open("/dev/rtc", O_RDWR);
 
