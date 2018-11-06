@@ -6,7 +6,7 @@ require 'nokogiri'
 require 'strscan'
 require 'set'
 
-INTERACTIVE=true
+INTERACTIVE=false
 WRAP=77
 
 $:.unshift(File.dirname(__FILE__))
