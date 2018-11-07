@@ -37,7 +37,7 @@
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static DBusMessage *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="libtime_8c.html#fafdf90dca5416e4d5c9e9e55815f981">client_get_rsp</a> (DBusMessage *msg)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="libtime_8c.html#d188120cf031aaced12da8bf171d7228">client_set_time</a> (time_t tck)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="libtime_8c.html#d188120cf031aaced12da8bf171d7228">client_set_time</a> (time_t tick)</td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="libtime_8c.html#cad4c08145a3ef4ae95ff6a3ab2aa243">client_activate_net_time</a> (void)</td></tr>
 
@@ -158,7 +158,7 @@ Raimo Vuonnala &lt;<a href="mailto:raimo.vuonnala@nokia.com">raimo.vuonnala@noki
 <div class="memdoc">
 
 <p>
-Create a new DBUs request.<p>
+Create a new D-Bus request.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>method</em>&nbsp;</td><td>D-Bus method </td></tr>
@@ -200,7 +200,7 @@ Send method call and wait for response<p>
 
 </div>
 </div><p>
-<a class="anchor" name="d188120cf031aaced12da8bf171d7228"></a><!-- doxytag: member="libtime.c::client_set_time" ref="d188120cf031aaced12da8bf171d7228" args="(time_t tck)" -->
+<a class="anchor" name="d188120cf031aaced12da8bf171d7228"></a><!-- doxytag: member="libtime.c::client_set_time" ref="d188120cf031aaced12da8bf171d7228" args="(time_t tick)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -208,7 +208,7 @@ Send method call and wait for response<p>
           <td class="memname">static int client_set_time           </td>
           <td>(</td>
           <td class="paramtype">time_t&nbsp;</td>
-          <td class="paramname"> <em>tck</em>          </td>
+          <td class="paramname"> <em>tick</em>          </td>
           <td>&nbsp;)&nbsp;</td>
           <td><code> [static]</code></td>
         </tr>
@@ -220,7 +220,7 @@ Send method call and wait for response<p>
 Execute 'set_time' method call over D-Bus<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>tck</em>&nbsp;</td><td>Current time (from Epoch)</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>tick</em>&nbsp;</td><td>Current time (from Epoch)</td></tr>
   </table>
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>1 if OK, 0 if fails </dd></dl>
@@ -423,7 +423,7 @@ Execute 'net_time_changed' method call over D-Bus<p>
     <tr><td valign="top"></td><td valign="top"><em>max</em>&nbsp;</td><td>Size of 's'</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>1 if OK, 0 if fails </dd></dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>Number of characters wrote to 's'. -1 if network time has not been changed. Does not write more than size bytes (including the trailing "\0"). If the output was truncated due to this limit then the return value is the number of characters (not including the trailing "\0") which would have been written to the final string if enough space had been available. Thus, a return value of size or more means that the output was truncated. </dd></dl>
 
 <p>Referenced by <a class="el" href="libtime_8c-source.html#l01276">time_get_net_time()</a>.</p>
 
@@ -571,7 +571,7 @@ Initialize libtime shlib:<br>
 <div class="memdoc">
 
 <p>
-De-nitialize libtime shlib:<br>
+De-initialize libtime shlib:<br>
 <ul>
 <li>semaphore<br>
  </li></ul>
@@ -1274,7 +1274,7 @@ Make time_t from struct tm. Like mktime() but timezone can be given.<p>
 Get the network time (in case that autosync is not enabled and a network time change indication has received)<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>tick</em>&nbsp;</td><td>Supplied buffer to store network time (ticks since Epock) </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>tick</em>&nbsp;</td><td>Supplied buffer to store network time (ticks since Epoch) </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>s</em>&nbsp;</td><td>Supplied buffer to store network timezone </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>max</em>&nbsp;</td><td>Size of 's', including terminating NUL</td></tr>
   </table>
