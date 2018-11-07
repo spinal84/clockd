@@ -1,3 +1,12 @@
+/**
+ * @brief Time services - usefull wrappers of system time services.
+ *
+ * @file  internal_time_utils.c
+ * Utilities above system time servises.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <time.h>
 #include <stdio.h>
 #include <errno.h>

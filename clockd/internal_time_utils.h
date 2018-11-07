@@ -2,6 +2,15 @@
 #define INTERNAL_TIME_UTILS_H
 
 /**
+ * @brief Time services - usefull wrappers of system time services.
+ *
+ * @file  internal_time_utils.h
+ * Utilities above system time servises.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
+/**
  * Get current time. Returns system time.
  * @return count of ticks from Epoch
  */

@@ -1,3 +1,12 @@
+/**
+ * @brief clockd main body
+ *
+ * @file  clockd.c
+ * This is the main file for clockd.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include "mainloop.h"
 
 /**

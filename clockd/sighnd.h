@@ -2,6 +2,12 @@
 #define SIGHND_H
 
 /**
+ * @brief Prototypes for sighnd.c
+ * @file  sighnd.h
+ * @copyright GNU GPLv2 or later
+ */
+
+/**
  * Setup signals as follows:
  * <ul>
  * <li>SIGUP: do nothing

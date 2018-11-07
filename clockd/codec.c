@@ -1,3 +1,15 @@
+/**
+ * @brief D-Bus encoding/decoding utilities.
+ *
+ * @file  codec.c
+ *
+ * Utilites for encoding/decoding dbus messages using message iterators.
+ * Useful only because libdbus does not expose some internal functions via
+ * the public API.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <string.h>
 #include <stdio.h>
 

@@ -1,3 +1,14 @@
+/**
+ * @brief Time services - utils to work with country timezones.
+ *
+ * @file  mcc_tz_utils.c
+ *
+ * Utilities to create list of timezones for a country determined by MCC
+ * (country code) and work with it
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <stdbool.h>
 #include <malloc.h>
 #include <glib.h>

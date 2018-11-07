@@ -1,6 +1,12 @@
 #ifndef CODEC_H
 #define CODEC_H
 
+/**
+ * @brief Time services - D-Bus encoding and decoding.
+ * @file  codec.h
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <time.h>
 #include <dbus/dbus.h>
 

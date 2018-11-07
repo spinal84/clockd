@@ -2,6 +2,12 @@
 #define SERVER_H
 
 /**
+ * @brief Prototypes for clockd 'server'
+ * @file  server.h
+ * @copyright GNU GPLv2 or later
+ */
+
+/**
  * Init D-Bus server
  *
  * The following is set up:
