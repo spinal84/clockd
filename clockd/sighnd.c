@@ -24,6 +24,13 @@ static const int signals[] =
   -1
 };
 
+/**
+ * Setup signals as follows:
+ *
+ * - SIGUP: do nothing
+ * - SIGUSR1: toggle debug mode
+ * - SIGINT, SIGQUIT, SIGTERM: terminate clockd
+ */
 void
 sighnd_setup(void)
 {
@@ -38,6 +45,10 @@ sighnd_setup(void)
   }
 }
 
+/**
+ * Internal signal helper function which is called when process is signalled.
+ * This is needed just for breaking away from while loop in main() function.
+ */
 static void
 sighnd_handler(int sig)
 {
@@ -64,6 +75,10 @@ sighnd_handler(int sig)
   }
 }
 
+/**
+ * Handle clockd terminate signal.
+ * @todo  Is it safe to call g_main_loop_quit() from signal handler?
+ */
 static void
 sighnd_terminate(void)
 {
