@@ -1,3 +1,12 @@
+/**
+ * @brief init clockd signals
+ *
+ * @file  sighnd.c
+ * This initializes clockd signal handler.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

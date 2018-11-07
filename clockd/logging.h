@@ -1,6 +1,15 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
+/**
+ * @brief clockd logging interface
+ *
+ * @file  logging.h
+ * Interface to syslog and console debug printing
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <syslog.h>
 #include <stdbool.h>
 

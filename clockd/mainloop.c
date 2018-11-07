@@ -1,3 +1,12 @@
+/**
+ * @brief clockd mainloop
+ *
+ * @file  mainloop.c
+ * This initializes/deinitializes clockd:
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <glib.h>
 #include <signal.h>
 #include <string.h>

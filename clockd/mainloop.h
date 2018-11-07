@@ -2,6 +2,12 @@
 #define MAINLOOP_H
 
 /**
+ * @brief clockd mainloop prototypes
+ * @file  mainloop.h
+ * @copyright GNU GPLv2 or later
+ */
+
+/**
  * Quit the mainloop.
  * @param force  If non-zero and no mainloop, exit the process with failure
  * @return       1 if success, 0 if fails (no mainloop)

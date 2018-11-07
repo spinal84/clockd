@@ -1,6 +1,12 @@
 #ifndef MCC_TZ_UTILS_H
 #define MCC_TZ_UTILS_H
 
+/**
+ * @brief Time services - utils to work with country timezones.
+ * @file  mcc_tz_utils.h
+ * @copyright GNU GPLv2 or later
+ */
+
 typedef int (*GetAutosyncEnabled)();
 typedef int (*HandleCsdNetTimeChange)(DBusMessage*);
 typedef void (*SetOperatorTz)(const char*);

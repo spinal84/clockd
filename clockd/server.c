@@ -1,3 +1,15 @@
+/**
+ * @brief clockd 'server'
+ *
+ * @file  server.c
+ *
+ * This is D-Bus server for clockd that communicates with clock/time -aware
+ * applications. It also listens for CSD NET_TIME_CHANGE signal and reacts to
+ * it accordingly.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/times.h>

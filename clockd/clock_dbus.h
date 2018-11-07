@@ -2,6 +2,15 @@
 #define CLOCK_DBUS_H
 
 /**
+ * @brief Time services - D-Bus definitions.
+ *
+ * @file  clock_dbus.h
+ * Defines D-Bus service and method names to communicate with clockd.
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
+/**
  * CLOCKD_SET_TIME:
  *
  * - I: int32 time
