@@ -1,4 +1,54 @@
 /**
+ @mainpage
+
+ Introduction
+ ------------
+  Time management service is a new subsystem to provide a common library
+  for all time-related (not alarms, though) services.
+
+ Structure
+ ---------
+  The following ASCII art describes the architecture.
+
+<pre>
++-----+  +-----+  +-----+
+|app 1|  |app 2|  |app 3| applications
+-------------------------  libtime.h
+       | libtime |
+       +---------+
+         ^ ^ ^
+         | | |
+   D-Bus | | |
+         | | |
+         v v v
+       +------+  D-Bus +---+
+daemon |clockd|&lt;-------|csd|
+       +------+        +---+
+           |                 userland
+-------------------------------------
+           |                 kernel
+     \- systemtime
+     \- RTC (real time clock)
+     \- timezone
+</pre>
+
+ Components
+ ----------
+  <b>clockd</b>
+  - The Daemon (see clockd.c, rclockd.c, mainloop.c and server.c)
+
+  <b>libtime</b>
+  - API library
+
+  <b>csd</b>
+  - Cellular service daemon
+  - Sends "network time changed" signal when operator time/timezone has
+    been received from vellnet (when attached to network)
+ */
+
+#include "mainloop.h"
+
+/**
  * @brief clockd main body
  *
  * @file  clockd.c
@@ -6,8 +56,6 @@
  *
  * @copyright GNU GPLv2 or later
  */
-
-#include "mainloop.h"
 
 /**
  * This is clockd main pgm.
