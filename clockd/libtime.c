@@ -432,6 +432,40 @@ client_get_autosync()
   return s_autosync_enabled;
 }
 
+static int
+client_set_autosync(int enable)
+{
+  DBusMessage *req;
+  dbus_bool_t result = FALSE;
+  dbus_bool_t db_enable = !!enable;
+
+  req = client_new_req(CLOCKD_SET_AUTOSYNC, DBUS_TYPE_BOOLEAN, &db_enable,
+                       DBUS_TYPE_INVALID);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+
+      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &result,
+                            DBUS_TYPE_INVALID);
+
+      if (result)
+        s_autosync_enabled = enable;
+
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(req);
+  }
+
+  return result;
+}
+
 static const char*
 client_get_default_tz()
 {
@@ -869,40 +903,11 @@ time_get_dst_usage(time_t tick, const char *tz)
 int
 time_set_autosync(int enable)
 {
-  DBusMessage *req;
-  DBusError error = DBUS_ERROR_INIT;
-  dbus_bool_t dbenable = !!enable;
-  int rv = -1;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  req = client_new_req(CLOCKD_SET_AUTOSYNC, DBUS_TYPE_BOOLEAN, &dbenable,
-                       DBUS_TYPE_INVALID);
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-
-    if (rsp)
-    {
-      dbus_bool_t success = FALSE;
-
-      if (dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &success,
-                                DBUS_TYPE_INVALID) && success)
-      {
-        rv = !!success;
-
-        if (success)
-          s_autosync_enabled = enable;
-      }
-
-      dbus_message_unref(rsp);
-    }
-
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_set_autosync(enable) ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
