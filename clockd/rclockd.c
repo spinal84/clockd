@@ -31,6 +31,7 @@ set_uid(__uid_t uid, const char *f)
   return uid;
 }
 
+/** See man 8 hwclock */
 static int
 set_time(const char *s)
 {

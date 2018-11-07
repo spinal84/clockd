@@ -7,6 +7,12 @@
 
 bool clockd_debug_mode = false;
 
+/**
+ * Log tm structure
+ *
+ * @param tag  string describing tm
+ * @param tm   tm to be logged
+ */
 void
 log_tm(const char *tag, const struct tm *tm)
 {
@@ -17,6 +23,10 @@ log_tm(const char *tag, const struct tm *tm)
          tm->tm_gmtoff, tm->tm_zone);
 }
 
+/**
+ * Dump current date settings to syslog.
+ * @param server_tz  current server timezone to be printed in log
+ */
 void
 dump_date(const char *server_tz)
 {
