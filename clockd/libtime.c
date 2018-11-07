@@ -94,7 +94,7 @@ time_dbus_connection_close()
   }
 }
 
-DBusMessage *
+static DBusMessage *
 client_get_rsp(DBusMessage *msg)
 {
   DBusMessage *rsp = NULL;
