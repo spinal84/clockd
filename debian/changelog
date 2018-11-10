@@ -1,3 +1,9 @@
+clockd (0.0.42) unstable; urgency=medium
+
+  * libtime: change some functions return value to be consistent with API docs
+
+ -- Arthur Demchenkov <spinal.by@gmail.com>  Sat, 10 Nov 2018 22:36:22 +0300
+
 clockd (0.0.41) unstable; urgency=medium
 
   * enable git builds
