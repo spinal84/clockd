@@ -56,7 +56,7 @@ set_time(const char *s)
         if (ioctl(fd, RTC_SET_TIME, tm) >= 0)
         {
           rv = 0;
-          DO_LOG(LOG_DEBUG, "time set succesfully to %lu", sec);
+          DO_LOG(LOG_DEBUG, "time set successfully to %lu", sec);
         }
         else
           DO_LOG(LOG_ERR, "ioctl(RTC_SET_TIME) error %s", strerror(errno));

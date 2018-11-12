@@ -195,7 +195,6 @@ internal_tz_cmp(const char *firstTZName, const char *secondTZName)
 
     for (i = 0; !rv && i < 3; i++)
     {
-
       memset(&tm2, 0, sizeof(tm2));
       tm2.tm_mday = days[i];
       tm2.tm_mon = months[i];

@@ -4,6 +4,8 @@
 #include <syslog.h>
 #include <stdbool.h>
 
+extern bool clockd_debug_mode;
+
 #define DO_LOG(__level, ...) \
 do {                                       \
   if (__level == LOG_DEBUG && !clockd_debug_mode) ;             \
@@ -36,9 +38,7 @@ do {                                       \
   } \
 }
 
-extern bool clockd_debug_mode;
-
-void log_tm(const char *tag, const struct tm *tm);
 void dump_date(const char *server_tz);
+void log_tm(const char *tag, const struct tm *tm);
 
 #endif // LOGGING_H

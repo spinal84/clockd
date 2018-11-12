@@ -28,6 +28,12 @@
 
 #define CLOCKD_CONFIGURATION_FILE "/home/user/.clockd.conf"
 
+struct server_callback
+{
+  const char *member;
+  DBusMessage *(*callback)(DBusMessage *method_call);
+};
+
 static DBusMessage *server_activate_net_time_cb(DBusMessage *msg);
 static DBusMessage *server_is_net_time_changed_cb(DBusMessage *msg);
 static DBusMessage *server_set_time_cb(DBusMessage *msg);
@@ -290,7 +296,7 @@ handle_csd_net_time_change(DBusMessage *msg)
       snprintf(buf, sizeof(buf), ":Etc/GMT%c%d:%d", sign, h, m);
     else
     {
-      if (h == 0)
+      if (!h)
         snprintf(buf, sizeof(buf), ":Etc/GMT");
       else
         snprintf(buf, sizeof(buf), ":Etc/GMT%c%d", sign, h);
@@ -958,7 +964,7 @@ server_init_default_tz()
 }
 
 static int
-read_conf ()
+read_conf()
 {
   struct stat st;
   FILE *fp;

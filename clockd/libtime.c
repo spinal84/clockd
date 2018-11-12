@@ -94,7 +94,7 @@ time_dbus_connection_close()
   }
 }
 
-DBusMessage *
+static DBusMessage *
 client_get_rsp(DBusMessage *msg)
 {
   DBusMessage *rsp = NULL;
@@ -128,6 +128,62 @@ client_get_rsp(DBusMessage *msg)
   dbus_error_free(&error);
 
   return rsp;
+}
+
+static int
+client_set_time(time_t tick)
+{
+  DBusMessage *msg;
+  dbus_int32_t db_time = tick;
+  dbus_bool_t result = FALSE;
+
+  msg = client_new_req(CLOCKD_SET_TIME, DBUS_TYPE_INT32, &db_time,
+                       DBUS_TYPE_INVALID);
+  if (msg)
+  {
+    DBusMessage *rsp = client_get_rsp(msg);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &result,
+                            DBUS_TYPE_INVALID);
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(msg);
+  }
+
+  return result;
+}
+
+static int
+client_activate_net_time(void)
+{
+  DBusMessage *req;
+  dbus_bool_t result = FALSE;
+
+  req = client_new_req(CLOCKD_ACTIVATE_NET_TIME, DBUS_TYPE_INVALID);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+      dbus_message_get_args(rsp, &error,
+                            DBUS_TYPE_BOOLEAN, &result,
+                            DBUS_TYPE_INVALID);
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(req);
+  }
+
+  return result;
 }
 
 static const char *
@@ -173,6 +229,86 @@ client_get_tz()
   return rv;
 }
 
+static int
+client_set_tz(const char *tz)
+{
+  DBusMessage *req;
+  dbus_bool_t result = false;
+
+  req = client_new_req(CLOCKD_SET_TZ, DBUS_TYPE_STRING, &tz, 0);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+
+      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &result,
+                            DBUS_TYPE_INVALID);
+
+      if (result)
+      {
+        snprintf(s_tz, sizeof(s_tz), "%s", tz);
+        setenv("TZ", tz, 1);
+        tzset();
+      }
+
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(req);
+  }
+
+  return result;
+}
+
+static int
+client_get_net_time(time_t *t, char *s, size_t max)
+{
+  int rv = -1;
+  DBusMessage *req;
+
+  *t = 0;
+
+  req = client_new_req(CLOCKD_NET_TIME_CHANGED, DBUS_TYPE_INVALID);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+    dbus_int32_t tick;
+    char *tz = NULL;
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+      if (dbus_message_get_args(rsp, &error,
+                                DBUS_TYPE_INT32, &tick,
+                                DBUS_TYPE_STRING, &tz,
+                                DBUS_TYPE_INVALID) && tick)
+      {
+        *t = tick;
+
+        if (tz)
+        {
+          snprintf(s, max, "%s", tz);
+          rv = strlen(tz);
+        }
+        else
+          rv = 0;
+      }
+
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+    dbus_message_unref(req);
+  }
+
+  return rv;
+}
+
 static const char *
 client_get_time_format()
 {
@@ -204,6 +340,36 @@ client_get_time_format()
   dbus_error_free(&error);
 
   return rv;
+}
+
+static int
+client_set_time_format(const char *fmt)
+{
+  DBusMessage *req;
+  dbus_bool_t result = FALSE;
+
+  req = client_new_req(CLOCKD_SET_TIMEFMT, DBUS_TYPE_STRING, &fmt,
+                       DBUS_TYPE_INVALID);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &result, 0);
+      if (result)
+        snprintf(s_time_format, sizeof(s_time_format), "%s", fmt);
+
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(req);
+  }
+
+  return result;
 }
 
 static int
@@ -264,6 +430,40 @@ client_get_autosync()
   dbus_error_free(&error);
 
   return s_autosync_enabled;
+}
+
+static int
+client_set_autosync(int enable)
+{
+  DBusMessage *req;
+  dbus_bool_t result = FALSE;
+  dbus_bool_t db_enable = !!enable;
+
+  req = client_new_req(CLOCKD_SET_AUTOSYNC, DBUS_TYPE_BOOLEAN, &db_enable,
+                       DBUS_TYPE_INVALID);
+
+  if (req)
+  {
+    DBusMessage *rsp = client_get_rsp(req);
+
+    if (rsp)
+    {
+      DBusError error = DBUS_ERROR_INIT;
+
+      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &result,
+                            DBUS_TYPE_INVALID);
+
+      if (result)
+        s_autosync_enabled = enable;
+
+      dbus_error_free(&error);
+      dbus_message_unref(rsp);
+    }
+
+    dbus_message_unref(req);
+  }
+
+  return result;
 }
 
 static const char*
@@ -336,80 +536,25 @@ time_get_time(void)
 int
 time_set_time(time_t tick)
 {
-  DBusMessage *msg;
-  DBusError error = DBUS_ERROR_INIT;
-  dbus_int32_t db_time = tick;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  msg = client_new_req(CLOCKD_SET_TIME, DBUS_TYPE_INT32, &db_time,
-                       DBUS_TYPE_INVALID);
-  if (msg)
-  {
-    DBusMessage *rsp = client_get_rsp(msg);
-
-    if (rsp)
-    {
-      dbus_bool_t res = FALSE;
-
-      dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &res,
-                            DBUS_TYPE_INVALID);
-      dbus_message_unref(rsp);
-    }
-
-    dbus_message_unref(msg);
-  }
-
-  dbus_error_free(&error);
+  rv = client_set_time(tick) ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
-  return 0;
+  return rv;
 }
 
 int
 time_get_net_time(time_t *tick, char *s, size_t max)
 {
-  int rv = -1;
-  DBusMessage *req;
-  DBusError error = DBUS_ERROR_INIT;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  *tick = 0;
-
-  req = client_new_req(CLOCKD_NET_TIME_CHANGED, DBUS_TYPE_INVALID);
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-    dbus_int32_t t;
-    char *tz = NULL;
-
-    if (rsp)
-    {
-      if (dbus_message_get_args(rsp, &error,
-                                DBUS_TYPE_INT32, &t,
-                                DBUS_TYPE_STRING, &tz,
-                                DBUS_TYPE_INVALID) && t)
-      {
-        *tick = t;
-
-        if (tz)
-        {
-          snprintf(s, max, "%s", tz);
-          rv = strlen(s);
-        }
-        else
-          rv = 1;
-      }
-
-      dbus_message_unref(rsp);
-    }
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_get_net_time(tick, s, max);
 
   TIME_EXIT_SYNC;
 
@@ -425,36 +570,11 @@ time_is_net_time_changed(time_t *tick, char *s, size_t max)
 int
 time_activate_net_time(void)
 {
-  DBusMessage *req;
-  int rv = -1;
-  DBusError error = DBUS_ERROR_INIT;
-  dbus_bool_t success = false;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  req = client_new_req(CLOCKD_ACTIVATE_NET_TIME, DBUS_TYPE_INVALID);
-  rv = 0;
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-
-    if (rsp)
-    {
-      if (dbus_message_get_args(rsp, &error,
-                                DBUS_TYPE_BOOLEAN, &success,
-                                DBUS_TYPE_INVALID) && success)
-      {
-        rv = 0;
-      }
-
-      dbus_message_unref(rsp);
-    }
-
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_activate_net_time() ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
@@ -530,38 +650,11 @@ time_diff(time_t t1, time_t t2)
 int
 time_set_timezone(const char *tz)
 {
-  DBusMessage *req;
-  int rv = -1;
-  DBusError error = DBUS_ERROR_INIT;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  req = client_new_req(CLOCKD_SET_TZ, 's', &tz, 0);
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-
-    if (rsp)
-    {
-      dbus_bool_t success = false;
-
-      if (dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &success,
-                                DBUS_TYPE_INVALID) && success)
-      {
-        snprintf(s_tz, sizeof(s_tz), "%s", tz);
-        setenv("TZ", tz, 1);
-        tzset();
-        rv = 0;
-      }
-
-      dbus_message_unref(rsp);
-    }
-
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_set_tz(tz) ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
@@ -680,36 +773,11 @@ time_get_time_format(char *s, size_t max)
 int
 time_set_time_format(const char *fmt)
 {
-  DBusMessage *req;
-  DBusError error = DBUS_ERROR_INIT;
-  int rv = -1;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  req = client_new_req(CLOCKD_SET_TIMEFMT, DBUS_TYPE_STRING, &fmt,
-                       DBUS_TYPE_INVALID);
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-
-    if (rsp)
-    {
-      dbus_bool_t success = FALSE;
-
-      if (dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &success, 0) &&
-          success)
-      {
-        snprintf(s_time_format, sizeof(s_time_format), "%s", fmt);
-        rv = 0;
-      }
-
-      dbus_message_unref(rsp);
-    }
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_set_time_format(fmt) ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
@@ -835,40 +903,11 @@ time_get_dst_usage(time_t tick, const char *tz)
 int
 time_set_autosync(int enable)
 {
-  DBusMessage *req;
-  DBusError error = DBUS_ERROR_INIT;
-  dbus_bool_t dbenable = !!enable;
-  int rv = -1;
+  int rv;
 
   TIME_TRY_INIT_SYNC(-1);
 
-  req = client_new_req(CLOCKD_SET_AUTOSYNC, DBUS_TYPE_BOOLEAN, &dbenable,
-                       DBUS_TYPE_INVALID);
-
-  if (req)
-  {
-    DBusMessage *rsp = client_get_rsp(req);
-
-    if (rsp)
-    {
-      dbus_bool_t success = FALSE;
-
-      if (dbus_message_get_args(rsp, &error, DBUS_TYPE_BOOLEAN, &success,
-                                DBUS_TYPE_INVALID) && success)
-      {
-        rv = !!success;
-
-        if (success)
-          s_autosync_enabled = enable;
-      }
-
-      dbus_message_unref(rsp);
-    }
-
-    dbus_message_unref(req);
-  }
-
-  dbus_error_free(&error);
+  rv = client_set_autosync(enable) ? 0 : -1;
 
   TIME_EXIT_SYNC;
 
