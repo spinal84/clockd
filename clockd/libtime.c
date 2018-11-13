@@ -1,12 +1,49 @@
 /**
- * @brief Implementation of libtime.
- *
- * @file  libtime.c
- *
- * This is the implementation of libtime (see libtime.h) <br>
- * Include also file <time.h>
- *
- * @copyright GNU GPLv2 or later
+ @mainpage
+
+ Introduction
+ ------------
+  Time management service is a subsystem to provide a common library for
+  all time-related (not alarms, though) services.
+
+ Structure
+ ---------
+  The following ASCII art describes the architecture.
+
+<pre>
++-----+  +-----+  +-----+
+|app 1|  |app 2|  |app 3| applications
+-------------------------  libtime.h
+       | libtime |
+       +---------+
+         ^ ^ ^
+         | | |
+   D-Bus | | |
+         | | |
+         v v v
+       +------+  D-Bus +---+
+daemon |clockd|<-------|csd|
+       +------+        +---+
+           |                 userland
+-------------------------------------
+           |                 kernel
+     \- systemtime
+     \- RTC (real time clock)
+     \- timezone
+</pre>
+
+ Components
+ ----------
+  \b clockd
+  - The Daemon
+
+  \b libtime
+  - API library (see libtime.c and libtime.h)
+
+  \b csd
+  - Cellular service daemon
+  - Sends "network time changed" signal when operator time/timezone has
+    been received from vellnet (when attached to network)
  */
 
 #include <sys/time.h>
@@ -24,6 +61,17 @@
 #include "clock_dbus.h"
 #include <pthread.h>
 #include <semaphore.h>
+
+/**
+ * @brief Implementation of libtime.
+ *
+ * @file  libtime.c
+ *
+ * This is the implementation of libtime (see libtime.h) <br>
+ * Include also file <time.h>
+ *
+ * @copyright GNU GPLv2 or later
+ */
 
 static bool s_inited = false;
 static bool s_autosync_enabled = false;
