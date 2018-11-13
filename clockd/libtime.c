@@ -1,3 +1,14 @@
+/**
+ * @brief Implementation of libtime.
+ *
+ * @file  libtime.c
+ *
+ * This is the implementation of libtime (see libtime.h) <br>
+ * Include also file <time.h>
+ *
+ * @copyright GNU GPLv2 or later
+ */
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
