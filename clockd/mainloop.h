@@ -7,6 +7,7 @@
  * @copyright GNU GPLv2 or later
  */
 
+
 /**
  * Quit the mainloop.
  * @param force  If non-zero and no mainloop, exit the process with failure
@@ -31,4 +32,4 @@ int mainloop_stop (int force);
  */
 int mainloop_run (int argc, char *argv[]);
 
-#endif // MAINLOOP_H
+#endif  /* MAINLOOP_H */

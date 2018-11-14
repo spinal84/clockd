@@ -129,11 +129,10 @@ internal_set_time(time_t t)
 }
 
 /**
- * Checks if timezone name is valid for glibc. See
- * http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ * Checks if timezone name is valid for glibc.
+ * See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @param zone  Tested timezone name
- *
  * @return      0 if valid or -1 if invalid
  */
 int
@@ -167,7 +166,6 @@ internal_check_timezone(const char *zone)
  * known by glibc.
  *
  * @param tzname  Time zone variable
- *
  * @return        0 if OK or error code
  */
 int
@@ -199,8 +197,7 @@ internal_setenv_tz(const char *tzname)
  * @param tm  See mktime
  * @param tz  Time zone variable. All formats that glibc supports can be
  *            given. NULL if current zone is used.<br>
- *            See
- *            http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *            See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return    Time since Epoch or 0 if error
  */
@@ -224,8 +221,7 @@ internal_mktime_in(struct tm *tm, const char *tz)
  * @param result  pointer to tm structure to place result
  * @param tz      Time zone variable. All formats that glibc supports can be
  *                given. NULL if current zone is used.<br>
- *                See
- *                http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *                See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return        result pointer or NULL if error
  */

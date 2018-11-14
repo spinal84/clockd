@@ -103,7 +103,6 @@ do { \
 
 /**
  * Initialize libtime shlib:
- *
  * - semaphore
  * - cached data
  */
@@ -116,7 +115,6 @@ libtime_init()
 
 /**
  * Deinitialize libtime shlib:
- *
  * - semaphore
  */
 __attribute__((destructor)) static void
@@ -282,8 +280,8 @@ client_activate_net_time(void)
 /**
  * Execute 'get_tz' method call over D-Bus
  *
- * @return  Pointer to locally stored timezone, NULL if fails. If success,
- *          activates the current time zone
+ * @return  Pointer to locally stored timezone, NULL if fails.
+ *          If success, activates the current time zone
  */
 static const char *
 client_get_tz()
@@ -736,8 +734,8 @@ time_set_time(time_t tick)
  *              the trailing "\0"). If the output was truncated due to this
  *              limit then the return value is the number of characters (not
  *              including the trailing "\0") which would have been written to
- *              the final string if enough space had been available. Thus, a
- *              return value of size or more means that the output was
+ *              the final string if enough space had been available. Thus,
+ *              a return value of size or more means that the output was
  *              truncated.
  */
 int
@@ -767,8 +765,7 @@ time_is_net_time_changed(time_t *tick, char *s, size_t max)
  * Set current system and RTC time according to operator network time in case
  * time_is_net_time_changed() indicates change
  *
- * @return  0 if OK, -1 if fails (for example if the network time has not
- *          changed)
+ * @return  0 if OK, -1 if fails (for example if the network time has not changed)
  */
 int
 time_activate_net_time(void)
@@ -790,8 +787,7 @@ time_activate_net_time(void)
  * @param tm  See mktime
  * @param tz  Time zone variable. All formats that glibc supports can be
  *            given. NULL if current zone is used.<br>
- *            See
- *            http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *            See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return    Time since Epoch (0) if error
  */
@@ -909,9 +905,9 @@ time_diff(time_t t1, time_t t2)
  *            http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html<br>
  *            It is, however recommended to use /usr/share/zoneinfo -method,
  *            for example:<br>
- *            :Europe/Rome<br>
+ *             :Europe/Rome<br>
  *            and not like this:<br>
- *            EST+5EDT,M4.1.0/2,M10.5.0/2
+ *             EST+5EDT,M4.1.0/2,M10.5.0/2
  *
  * @return    0 if OK, -1 if fails
  */
@@ -1020,10 +1016,8 @@ time_get_local_ex(time_t tick, struct tm *tm)
  * localtime_r().
  *
  * @param tick  Time since Epoch
- * @param tz    Time zone variable. All formats that glibc supports can be
- *              given.<br>
- *              See
- *              http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ * @param tz    Time zone variable. All formats that glibc supports can be given.<br>
+ *              See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  * @param tm    Supplied buffer to store tm
  *
  * @return      0 if OK, -1 if error
@@ -1109,7 +1103,7 @@ time_get_time_format(char *s, size_t max)
 }
 
 /**
- * Set current time string formatter. Inspired by strftime().
+ * Set current time string formatter. Inspired by strftime()
  * @param fmt  Formatter string
  * @return     0 if OK, -1 if fails
  */
@@ -1128,7 +1122,7 @@ time_set_time_format(const char *fmt)
 }
 
 /**
- * Format given time to string. Inspired by strftime() and localtime_r().
+ * Format given time to string. Inspired by strftime() and localtime_r()
  *
  * @param tm   Time
  * @param fmt  Formatter, see strftime and time_set_time_format and
@@ -1178,8 +1172,7 @@ get_utc_offset(time_t tick)
  *
  * @param tz  Time zone, all formats that glibc supports can be given. NULL
  *            to use current tz.<br>
- *            See
- *            http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *            See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return    Secs west of GMT. or -1 in case of error
  */
@@ -1217,8 +1210,7 @@ time_get_utc_offset(const char *tz)
  * @param tick  Time since Epoch
  * @param tz    Time zone, all formats that glibc supports can be given. NULL
  *              to use current tz.<br>
- *              See
- *              http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *              See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return      Non-zero if daylight savings time is in effect, zero if not,
  *              -1 if error

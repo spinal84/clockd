@@ -28,9 +28,6 @@
 #include <glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-//#include <libosso.h>
-
-
 #include "codec.h"
 #include "logging.h"
 #include "server.h"
@@ -421,7 +418,6 @@ out:
  * change indication with libosso.
  *
  * @param msg  request message
- *
  * @return     NULL if fails, pointer to response DBusMessage if OK
  */
 static DBusMessage *
@@ -468,7 +464,6 @@ server_is_net_time_changed_cb(DBusMessage *msg)
  * indication with libosso.
  *
  * @param msg  request message
- *
  * @return     NULL if fails, pointer to response DBusMessage if OK
  */
 static DBusMessage *
@@ -511,7 +506,6 @@ server_set_time_cb(DBusMessage *msg)
  * indication. Saves config to /home/user/.clockd.conf
  *
  * @param msg  request message
- *
  * @return     NULL if fails, pointer to response DBusMessage if OK
  */
 static DBusMessage *
@@ -577,7 +571,6 @@ server_set_tz_cb(DBusMessage *msg)
  * change indication with libosso. Saves config to /home/user/.clockd.conf
  *
  * @param msg  request message
- *
  * @return     NULL if fails, pointer to response DBusMessage if OK
  */
 static DBusMessage *
@@ -630,7 +623,6 @@ server_set_autosync_cb(DBusMessage *msg)
  * /home/user/.clockd.conf
  *
  * @param msg  request message
- *
  * @return     NULL if fails, pointer to response DBusMessage if OK
  */
 static DBusMessage *

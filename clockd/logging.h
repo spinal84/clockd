@@ -86,4 +86,4 @@ void dump_date(const char *server_tz);
  */
 void log_tm(const char *tag, const struct tm *tm);
 
-#endif // LOGGING_H
+#endif  /* LOGGING_H */

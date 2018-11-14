@@ -93,4 +93,4 @@ int mcc_tz_utils_init(DBusConnection *server_system_bus,
  */
 void mcc_tz_utils_quit(void);
 
-#endif // MCC_TZ_UTILS_H
+#endif  /* MCC_TZ_UTILS_H */

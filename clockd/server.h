@@ -7,6 +7,7 @@
  * @copyright GNU GPLv2 or later
  */
 
+
 /**
  * Init D-Bus server
  *
@@ -27,4 +28,4 @@ int server_init(void);
  */
 void server_quit(void);
 
-#endif // SERVER_H
+#endif  /* SERVER_H */

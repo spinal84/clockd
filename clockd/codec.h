@@ -73,8 +73,8 @@ int decode_tm (DBusMessageIter *iter, struct tm *tm);
  * - What is the YMDhms in Finland? 2. May 2008, 00:00:00
  *
  * - What is the value of Timezone in Finland? UTC+2 hours EET
- * - What is the YMDhms in California? San Francisco (U.S.A. - California) 1.
- *   May 2008, 14:00:00
+ * - What is the YMDhms in California? San Francisco (U.S.A. - California)
+ *   1. May 2008, 14:00:00
  *
  * - What is the value of Timezone in California ? UTC-8 hours PST
  *
@@ -86,4 +86,4 @@ int decode_tm (DBusMessageIter *iter, struct tm *tm);
  */
 int decode_ctm (DBusMessageIter *iter, struct tm *tm);
 
-#endif // CODEC_H
+#endif  /* CODEC_H */

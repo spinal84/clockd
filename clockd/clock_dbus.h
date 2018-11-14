@@ -10,6 +10,7 @@
  * @copyright GNU GPLv2 or later
  */
 
+
 /**
  * CLOCKD_SET_TIME:
  *
@@ -234,4 +235,4 @@
 #define DBUS_TIMEOUT_USE_DEFAULT -1
 #endif
 
-#endif // CLOCK_DBUS_H
+#endif  /* CLOCK_DBUS_H */

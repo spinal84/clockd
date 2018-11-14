@@ -10,6 +10,7 @@
  * @copyright GNU GPLv2 or later
  */
 
+
 /**
  * Get current time. Returns system time.
  * @return  count of ticks from Epoch
@@ -73,11 +74,10 @@ void internal_tz_res(char **old);
 /**
  * Make time_t from struct tm. Like mktime() but timezone can be given.
  *
- * @param tm  See mktime
+ * @param tm  See mktime()
  * @param tz  Time zone variable. All formats that glibc supports can be
  *            given. NULL if current zone is used.<br>
- *            See
- *            http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *            See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return    Time since Epoch or 0 if error
  */
@@ -90,8 +90,7 @@ time_t internal_mktime_in(struct tm *tm, const char *tz);
  * @param result  pointer to tm structure to place result
  * @param tz      Time zone variable. All formats that glibc supports can be
  *                given. NULL if current zone is used.<br>
- *                See
- *                http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
+ *                See http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @return        result pointer or NULL if error
  */
@@ -105,7 +104,6 @@ struct tm *internal_localtime_r_in(struct tm *utc_tm,
  * known by glibc.
  *
  * @param tzname  Time zone variable
- *
  * @return        0 if OK or error code
  */
 int internal_setenv_tz(const char *tzname);
@@ -125,9 +123,8 @@ int internal_tz_cmp(const char *firstTZName, const char *secondTZName);
  * http://www.gnu.org/software/libtool/manual/libc/TZ-Variable.html
  *
  * @param zone  Tested timezone name
- *
  * @return      0 if valid or -1 if invalid
  */
 int internal_check_timezone(const char *zone);
 
-#endif // INTERNAL_TIME_UTILS_H
+#endif  /* INTERNAL_TIME_UTILS_H */

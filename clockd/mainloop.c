@@ -35,7 +35,7 @@ static GMainLoop *mainloop = NULL;
  * @param argc  argc
  * @param argv  argv
  *
- * @return      0 if exited normally, non-zero if exit with failure.
+ * @return  0 if exited normally, non-zero if exit with failure.
  */
 int
 mainloop_run(int argc, char **argv)
